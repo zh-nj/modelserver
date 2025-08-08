@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM推理服务</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 600px;
+      width: 90%;
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 2.5em;
+    }
+    
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 1.2em;
+    }
+    
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px 0;
+      padding: 15px;
+      border-radius: 10px;
+      font-weight: 500;
+    }
+    
+    .success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .btn-group {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 30px;
+    }
+    
+    .btn {
+      background: #007aff;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+      background: #0056b3;
+      transform: translateY(-2px);
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+    }
+    
+    .btn-secondary:hover {
+      background: #545b62;
+    }
+    
+    #test-result {
+      margin-top: 20px;
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #007aff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .feature-list {
+      text-align: left;
+      margin: 30px 0;
+    }
+    
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 10px 0;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+    
+    .feature-icon {
+      font-size: 1.5em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 LLM推理服务</h1>
+    <p class="subtitle">大语言模型推理管理和监控平台</p>
+    
+    <div id="backend-status" class="status info">
+      <span class="loading"></span>
+      正在检测后端服务状态...
+    </div>
+    
+    <div class="feature-list">
+      <div class="feature-item">
+        <span class="feature-icon">🤖</span>
+        <span>多框架支持 (llama.cpp, vLLM, Docker)</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">⚡</span>
+        <span>智能资源调度和GPU管理</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">📊</span>
+        <span>实时监控和性能分析</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">🔧</span>
+        <span>Web管理界面和RESTful API</span>
+      </div>
+    </div>
+    
+    <div class="btn-group">
+      <button class="btn" onclick="testBackend()">🔄 重新检测</button>
+      <a href="http://localhost:8000/docs" target="_blank" class="btn">📚 API文档</a>
+      <a href="http://localhost:8000/health" target="_blank" class="btn btn-secondary">💓 健康检查</a>
+    </div>
+    
+    <div id="test-result"></div>
+  </div>
+
+  <script>
+    async function testBackend() {
+      const statusDiv = document.getElementById('backend-status');
+      const resultDiv = document.getElementById('test-result');
+      
+      statusDiv.innerHTML = '<span class="loading"></span> 正在检测后端服务...';
+      statusDiv.className = 'status info';
+      resultDiv.innerHTML = '';
+      
+      try {
+        const response = await fetch('http://localhost:8000/health');
+        
+        if (response.ok) {
+          const data = await response.json();
+          statusDiv.innerHTML = '✅ 后端服务运行正常';
+          statusDiv.className = 'status success';
+          
+          resultDiv.innerHTML = `
+            <div class="status success">
+              <strong>连接成功！</strong><br>
+              服务地址: <a href="http://localhost:8000" target="_blank">http://localhost:8000</a><br>
+              响应时间: ${Date.now() - startTime}ms
+            </div>
+          `;
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+      } catch (error) {
+        statusDiv.innerHTML = '❌ 后端服务连接失败';
+        statusDiv.className = 'status error';
+        
+        resultDiv.innerHTML = `
+          <div class="status error">
+            <strong>连接失败:</strong> ${error.message}<br>
+            请确保后端服务已启动在 <code>http://localhost:8000</code>
+          </div>
+        `;
+      }
+    }
+    
+    // 页面加载时自动检测
+    let startTime;
+    window.onload = function() {
+      startTime = Date.now();
+      testBackend();
+    };
+    
+    // 每30秒自动检测一次
+    setInterval(() => {
+      startTime = Date.now();
+      testBackend();
+    }, 30000);
+  </script>
+</body>
+</html>

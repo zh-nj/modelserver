@@ -1,0 +1,39 @@
+[Unit]
+Description=LLM推理服务后端
+Documentation=https://github.com/your-org/llm-inference-service
+After=network.target
+
+[Service]
+Type=exec
+User=llm-service
+Group=llm-service
+WorkingDirectory=/opt/llm-inference-service/backend
+Environment=PYTHONPATH=/opt/llm-inference-service/backend
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=/etc/llm-inference/backend.env
+ExecStart=/opt/llm-inference-service/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+
+# 安全设置
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/llm-inference-service/backend/logs
+ReadWritePaths=/opt/llm-inference-service/backend/data
+ReadWritePaths=/tmp
+
+# 资源限制
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# 日志设置
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=llm-inference-backend
+
+[Install]
+WantedBy=multi-user.target

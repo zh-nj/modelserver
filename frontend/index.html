@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM推理服务管理平台</title>
+  <meta name="description" content="专业的大语言模型推理管理和监控平台">
+  <meta name="theme-color" content="#1a73e8">
+  
+  <!-- 图标 -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🤖%3C/text%3E%3C/svg%3E">
+  
+  <!-- 字体 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- 图标库 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --primary-color: #1a73e8;
+      --primary-dark: #1557b0;
+      --secondary-color: #34a853;
+      --warning-color: #fbbc04;
+      --error-color: #ea4335;
+      --surface-color: #ffffff;
+      --background-color: #f8f9fa;
+      --text-primary: #202124;
+      --text-secondary: #5f6368;
+      --border-color: #dadce0;
+      --shadow-light: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+      --shadow-medium: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+      --shadow-heavy: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+      --border-radius: 8px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--background-color);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* 顶部导航栏 */
+    .navbar {
+      background: var(--surface-color);
+      box-shadow: var(--shadow-light);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      height: 64px;
+    }
+
+    .navbar-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+
+    .logo i {
+      font-size: 24px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .status-online {
+      background: rgba(52, 168, 83, 0.1);
+      color: var(--secondary-color);
+    }
+
+    .status-offline {
+      background: rgba(234, 67, 53, 0.1);
+      color: var(--error-color);
+    }
+
+    .status-loading {
+      background: rgba(251, 188, 4, 0.1);
+      color: var(--warning-color);
+    }
+
+    /* 主要内容区域 */
+    .main-content {
+      margin-top: 64px;
+      min-height: calc(100vh - 64px);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* 页面标题 */
+    .page-header {
+      margin-bottom: 32px;
+    }
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+    }
+
+    /* 卡片网格 */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .card {
+      background: var(--surface-color);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-light);
+      padding: 24px;
+      transition: var(--transition);
+      border: 1px solid var(--border-color);
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-medium);
+      transform: translateY(-2px);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: white;
+    }
+
+    .card-icon.primary { background: var(--primary-color); }
+    .card-icon.success { background: var(--secondary-color); }
+    .card-icon.warning { background: var(--warning-color); }
+    .card-icon.error { background: var(--error-color); }
+
+    .card-content {
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .metric-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .metric-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* 按钮 */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: var(--border-radius);
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      box-shadow: var(--shadow-medium);
+    }
+
+    .btn-secondary {
+      background: var(--surface-color);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--background-color);
+      box-shadow: var(--shadow-light);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    /* 功能区域 */
+    .features-section {
+      margin-top: 48px;
+    }
+
+    .section-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--surface-color);
+      border-radius: var(--border-radius);
+      padding: 20px;
+      border: 1px solid var(--border-color);
+      transition: var(--transition);
+    }
+
+    .feature-card:hover {
+      box-shadow: var(--shadow-light);
+      border-color: var(--primary-color);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: white;
+      margin-bottom: 16px;
+    }
+
+    .feature-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .feature-description {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* 加载动画 */
+    .loading-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid transparent;
+      border-top: 2px solid currentColor;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+      .navbar-content {
+        padding: 0 16px;
+      }
+
+      .container {
+        padding: 24px 16px;
+      }
+
+      .page-title {
+        font-size: 24px;
+      }
+
+      .cards-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .btn-group {
+        flex-direction: column;
+      }
+
+      .btn {
+        justify-content: center;
+      }
+    }
+
+    /* 暗色主题支持 */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --surface-color: #1f1f1f;
+        --background-color: #121212;
+        --text-primary: #e8eaed;
+        --text-secondary: #9aa0a6;
+        --border-color: #3c4043;
+      }
+    }
+
+    /* 动画效果 */
+    .fade-in {
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .slide-in {
+      animation: slideIn 0.8s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    /* 通知样式 */
+    .notification {
+      position: fixed;
+      top: 80px;
+      right: 24px;
+      background: var(--surface-color);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-heavy);
+      padding: 16px 20px;
+      border-left: 4px solid var(--primary-color);
+      z-index: 1001;
+      transform: translateX(400px);
+      transition: var(--transition);
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    .notification.success {
+      border-left-color: var(--secondary-color);
+    }
+
+    .notification.error {
+      border-left-color: var(--error-color);
+    }
+  </style>
+</head>
+<body>
+  <!-- 顶部导航栏 -->
+  <nav class="navbar">
+    <div class="navbar-content">
+      <a href="#" class="logo">
+        <i class="fas fa-robot"></i>
+        <span>LLM推理服务</span>
+      </a>
+      <div class="nav-actions">
+        <div id="status-indicator" class="status-indicator status-loading">
+          <span class="loading-spinner"></span>
+          <span>检测中...</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 主要内容 -->
+  <main class="main-content">
+    <div class="container">
+      <!-- 页面标题 -->
+      <header class="page-header fade-in">
+        <h1 class="page-title">LLM推理服务管理平台</h1>
+        <p class="page-subtitle">专业的大语言模型推理管理、监控和调度平台</p>
+      </header>
+
+      <!-- 状态卡片 -->
+      <section class="cards-grid fade-in">
+        <!-- 服务状态卡片 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <div class="card-icon primary">
+                <i class="fas fa-server"></i>
+              </div>
+              <span>服务状态</span>
+            </div>
+          </div>
+          <div class="card-content">
+            <div id="service-status">
+              <div class="metric-value">检测中...</div>
+              <div class="metric-label">后端服务状态</div>
+            </div>
+            <div class="btn-group">
+              <button class="btn btn-primary" onclick="checkServiceStatus()">
+                <i class="fas fa-sync-alt"></i>
+                刷新状态
+              </button>
+              <a href="http://localhost:8000/health" target="_blank" class="btn btn-secondary">
+                <i class="fas fa-external-link-alt"></i>
+                健康检查
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- API文档卡片 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <div class="card-icon success">
+                <i class="fas fa-book"></i>
+              </div>
+              <span>API文档</span>
+            </div>
+          </div>
+          <div class="card-content">
+            <div class="metric-value">Swagger UI</div>
+            <div class="metric-label">交互式API文档</div>
+            <div class="btn-group">
+              <a href="http://localhost:8000/docs" target="_blank" class="btn btn-primary">
+                <i class="fas fa-external-link-alt"></i>
+                打开文档
+              </a>
+              <a href="http://localhost:8000/redoc" target="_blank" class="btn btn-secondary">
+                <i class="fas fa-file-alt"></i>
+                ReDoc文档
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- 系统监控卡片 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <div class="card-icon warning">
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <span>系统监控</span>
+            </div>
+          </div>
+          <div class="card-content">
+            <div id="system-metrics">
+              <div class="metric-value">实时监控</div>
+              <div class="metric-label">GPU、CPU、内存状态</div>
+            </div>
+            <div class="btn-group">
+              <button class="btn btn-primary" onclick="openMonitoring()">
+                <i class="fas fa-tachometer-alt"></i>
+                查看监控
+              </button>
+              <button class="btn btn-secondary" onclick="checkSystemMetrics()">
+                <i class="fas fa-info-circle"></i>
+                系统信息
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 功能特性 -->
+      <section class="features-section slide-in">
+        <h2 class="section-title">
+          <i class="fas fa-star"></i>
+          核心功能
+        </h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon primary">
+              <i class="fas fa-cogs"></i>
+            </div>
+            <h3 class="feature-title">多框架支持</h3>
+            <p class="feature-description">支持llama.cpp、vLLM、Docker等多种推理框架，灵活适配不同模型需求</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon success">
+              <i class="fas fa-microchip"></i>
+            </div>
+            <h3 class="feature-title">智能资源调度</h3>
+            <p class="feature-description">基于优先级的GPU资源自动分配，支持抢占式调度和负载均衡</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon warning">
+              <i class="fas fa-chart-bar"></i>
+            </div>
+            <h3 class="feature-title">实时监控</h3>
+            <p class="feature-description">全面的GPU利用率、模型健康状态和性能指标实时监控</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon error">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <h3 class="feature-title">高可用性</h3>
+            <p class="feature-description">自动故障转移、健康检查、配置备份和灾难恢复机制</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon primary">
+              <i class="fas fa-code"></i>
+            </div>
+            <h3 class="feature-title">RESTful API</h3>
+            <p class="feature-description">完整的REST API接口，支持模型管理、监控查询和系统配置</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon success">
+              <i class="fas fa-desktop"></i>
+            </div>
+            <h3 class="feature-title">Web管理界面</h3>
+            <p class="feature-description">直观的Web界面，支持桌面端和移动端，提供完整的管理功能</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 快速操作 -->
+      <section class="features-section">
+        <h2 class="section-title">
+          <i class="fas fa-rocket"></i>
+          快速操作
+        </h2>
+        <div class="cards-grid">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon primary">
+                  <i class="fas fa-brain"></i>
+                </div>
+                <span>模型管理</span>
+              </div>
+            </div>
+            <div class="card-content">
+              <p>管理和配置大语言模型，支持模型加载、卸载和参数调优</p>
+              <div class="btn-group">
+                <button class="btn btn-primary" onclick="openModelManagement()">
+                  <i class="fas fa-plus"></i>
+                  添加模型
+                </button>
+                <button class="btn btn-secondary" onclick="listModels()">
+                  <i class="fas fa-list"></i>
+                  模型列表
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon success">
+                  <i class="fas fa-tasks"></i>
+                </div>
+                <span>任务调度</span>
+              </div>
+            </div>
+            <div class="card-content">
+              <p>查看和管理推理任务队列，监控任务执行状态和性能</p>
+              <div class="btn-group">
+                <button class="btn btn-primary" onclick="openTaskScheduler()">
+                  <i class="fas fa-calendar-alt"></i>
+                  任务队列
+                </button>
+                <button class="btn btn-secondary" onclick="viewTaskHistory()">
+                  <i class="fas fa-history"></i>
+                  执行历史
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon warning">
+                  <i class="fas fa-cog"></i>
+                </div>
+                <span>系统配置</span>
+              </div>
+            </div>
+            <div class="card-content">
+              <p>系统参数配置、用户权限管理和服务设置</p>
+              <div class="btn-group">
+                <button class="btn btn-primary" onclick="openSystemConfig()">
+                  <i class="fas fa-wrench"></i>
+                  系统设置
+                </button>
+                <button class="btn btn-secondary" onclick="viewLogs()">
+                  <i class="fas fa-file-alt"></i>
+                  查看日志
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- 通知容器 -->
+  <div id="notification" class="notification"></div>
+
+  <script>
+    // 全局状态管理
+    const AppState = {
+      backendStatus: 'unknown',
+      lastCheck: null,
+      autoRefresh: true,
+      refreshInterval: 30000
+    };
+
+    // 工具函数
+    const Utils = {
+      formatTime: (date) => {
+        return new Intl.DateTimeFormat('zh-CN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        }).format(date);
+      },
+
+      showNotification: (message, type = 'info') => {
+        const notification = document.getElementById('notification');
+        notification.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            <span>${message}</span>
+          </div>
+        `;
+        notification.className = `notification ${type} show`;
+        
+        setTimeout(() => {
+          notification.classList.remove('show');
+        }, 3000);
+      },
+
+      apiRequest: async (endpoint, options = {}) => {
+        try {
+          const response = await fetch(`http://localhost:8000${endpoint}`, {
+            headers: {
+              'Content-Type': 'application/json',
+              ...options.headers
+            },
+            ...options
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          return await response.json();
+        } catch (error) {
+          console.error('API请求失败:', error);
+          throw error;
+        }
+      }
+    };
+
+    // 服务状态检查
+    async function checkServiceStatus() {
+      const statusIndicator = document.getElementById('status-indicator');
+      const serviceStatus = document.getElementById('service-status');
+      
+      // 更新UI为加载状态
+      statusIndicator.className = 'status-indicator status-loading';
+      statusIndicator.innerHTML = '<span class="loading-spinner"></span><span>检测中...</span>';
+      
+      serviceStatus.innerHTML = `
+        <div class="metric-value"><span class="loading-spinner"></span></div>
+        <div class="metric-label">正在检测服务状态...</div>
+      `;
+
+      try {
+        const startTime = Date.now();
+        const healthData = await Utils.apiRequest('/health');
+        const responseTime = Date.now() - startTime;
+        
+        // 更新全局状态
+        AppState.backendStatus = 'online';
+        AppState.lastCheck = new Date();
+        
+        // 更新状态指示器
+        statusIndicator.className = 'status-indicator status-online';
+        statusIndicator.innerHTML = '<i class="fas fa-check-circle"></i><span>服务正常</span>';
+        
+        // 更新服务状态卡片
+        serviceStatus.innerHTML = `
+          <div class="metric-value">✅ 运行正常</div>
+          <div class="metric-label">响应时间: ${responseTime}ms | 最后检查: ${Utils.formatTime(AppState.lastCheck)}</div>
+        `;
+        
+        Utils.showNotification('后端服务连接成功', 'success');
+        
+        // 获取系统指标
+        await checkSystemMetrics();
+        
+      } catch (error) {
+        // 更新全局状态
+        AppState.backendStatus = 'offline';
+        AppState.lastCheck = new Date();
+        
+        // 更新状态指示器
+        statusIndicator.className = 'status-indicator status-offline';
+        statusIndicator.innerHTML = '<i class="fas fa-exclamation-circle"></i><span>服务异常</span>';
+        
+        // 更新服务状态卡片
+        serviceStatus.innerHTML = `
+          <div class="metric-value">❌ 连接失败</div>
+          <div class="metric-label">错误: ${error.message}</div>
+        `;
+        
+        Utils.showNotification(`服务连接失败: ${error.message}`, 'error');
+      }
+    }
+
+    // 检查系统指标
+    async function checkSystemMetrics() {
+      try {
+        const metrics = await Utils.apiRequest('/api/system/metrics');
+        const systemMetrics = document.getElementById('system-metrics');
+        
+        systemMetrics.innerHTML = `
+          <div class="metric-value">📊 ${metrics.models || 0} 个模型</div>
+          <div class="metric-label">CPU: ${metrics.cpu_usage || 'N/A'}% | 内存: ${metrics.memory_usage || 'N/A'}%</div>
+        `;
+      } catch (error) {
+        console.warn('获取系统指标失败:', error);
+      }
+    }
+
+    // 功能函数
+    function openMonitoring() {
+      Utils.apiRequest('/api/monitoring/dashboard')
+        .then(() => {
+          window.open('http://localhost:8000/api/monitoring/dashboard', '_blank');
+        })
+        .catch(() => {
+          Utils.showNotification('监控面板暂时不可用，请稍后再试', 'warning');
+        });
+    }
+
+    function openModelManagement() {
+      Utils.showNotification('正在开发模型管理功能...', 'info');
+    }
+
+    function listModels() {
+      Utils.apiRequest('/api/models')
+        .then(models => {
+          Utils.showNotification(`当前有 ${models.length || 0} 个模型`, 'info');
+        })
+        .catch(() => {
+          Utils.showNotification('获取模型列表失败', 'error');
+        });
+    }
+
+    function openTaskScheduler() {
+      Utils.showNotification('任务调度功能正在开发中...', 'info');
+    }
+
+    function viewTaskHistory() {
+      Utils.showNotification('任务历史功能正在开发中...', 'info');
+    }
+
+    function openSystemConfig() {
+      Utils.showNotification('系统配置功能正在开发中...', 'info');
+    }
+
+    function viewLogs() {
+      window.open('http://localhost:8000/api/system/logs', '_blank');
+    }
+
+    // 自动刷新功能
+    function startAutoRefresh() {
+      if (AppState.autoRefresh) {
+        setInterval(() => {
+          if (document.visibilityState === 'visible') {
+            checkServiceStatus();
+          }
+        }, AppState.refreshInterval);
+      }
+    }
+
+    // 页面初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      // 初始检查服务状态
+      checkServiceStatus();
+      
+      // 启动自动刷新
+      startAutoRefresh();
+      
+      // 页面可见性变化时刷新
+      document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible' && AppState.backendStatus === 'offline') {
+          checkServiceStatus();
+        }
+      });
+      
+      // 添加键盘快捷键
+      document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey || e.metaKey) {
+          switch(e.key) {
+            case 'r':
+              e.preventDefault();
+              checkServiceStatus();
+              break;
+            case 'd':
+              e.preventDefault();
+              window.open('http://localhost:8000/docs', '_blank');
+              break;
+          }
+        }
+      });
+      
+      console.log('🚀 LLM推理服务管理平台已加载');
+      console.log('快捷键: Ctrl+R 刷新状态, Ctrl+D 打开API文档');
+    });
+
+    // 错误处理
+    window.addEventListener('error', function(e) {
+      console.error('页面错误:', e.error);
+      Utils.showNotification('页面发生错误，请刷新重试', 'error');
+    });
+
+    // 网络状态监听
+    window.addEventListener('online', function() {
+      Utils.showNotification('网络连接已恢复', 'success');
+      checkServiceStatus();
+    });
+
+    window.addEventListener('offline', function() {
+      Utils.showNotification('网络连接已断开', 'error');
+    });
+  </script>
+</body>
+</html>

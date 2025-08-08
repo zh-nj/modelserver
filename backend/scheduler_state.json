@@ -1,0 +1,24 @@
+{
+  "model_states": {
+    "model_high_priority": {
+      "model_id": "model_high_priority",
+      "status": "stopped",
+      "preemption_count": 0,
+      "last_scheduled": null,
+      "allocated_resources": null
+    },
+    "model_medium_priority": {
+      "model_id": "model_medium_priority",
+      "status": "stopped",
+      "preemption_count": 0,
+      "last_scheduled": null,
+      "allocated_resources": null
+    }
+  },
+  "schedule_history": [],
+  "recovery_queue": [
+    "model_high_priority"
+  ],
+  "last_saved": "2025-08-07 10:33:43.389507",
+  "version": "1.0"
+}

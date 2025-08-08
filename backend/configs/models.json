@@ -1,0 +1,41 @@
+{
+  "test-model-1": {
+    "id": "test-model-1",
+    "name": "测试模型1",
+    "framework": "llama_cpp",
+    "model_path": "/models/test.gguf",
+    "priority": 5,
+    "gpu_devices": [
+      0
+    ],
+    "parameters": {
+      "port": 8001,
+      "host": "127.0.0.1",
+      "ctx_size": 2048
+    },
+    "resource_requirements": {
+      "gpu_memory": 4096,
+      "gpu_devices": [
+        0
+      ],
+      "cpu_cores": null,
+      "system_memory": null
+    },
+    "health_check": {
+      "enabled": true,
+      "interval": 30,
+      "timeout": 10,
+      "max_failures": 3,
+      "endpoint": "/health"
+    },
+    "retry_policy": {
+      "enabled": true,
+      "max_attempts": 3,
+      "initial_delay": 1,
+      "max_delay": 300,
+      "backoff_factor": 2.0
+    },
+    "created_at": "2025-08-08T08:32:16.051644",
+    "updated_at": "2025-08-08T08:32:16.051644"
+  }
+}

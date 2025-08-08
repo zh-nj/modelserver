@@ -1,0 +1,249 @@
+/**
+ * 桌面端特定样式
+ */
+
+// 桌面端布局
+@media (min-width: 1024px) {
+  .desktop {
+    .view-main {
+      max-width: 1200px;
+      margin: 0 auto;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .navbar {
+      height: 50px;
+      
+      .title {
+        font-size: 18px;
+        font-weight: 600;
+      }
+    }
+    
+    .page-content {
+      padding: var(--spacing-lg);
+    }
+    
+    // 卡片布局优化
+    .card {
+      margin-bottom: var(--spacing-md);
+      border-radius: var(--border-radius-lg);
+      box-shadow: var(--shadow-md);
+      
+      &:hover {
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-2px);
+        transition: all 0.2s ease;
+      }
+    }
+    
+    // 列表优化
+    .list {
+      .list-item {
+        padding: var(--spacing-md);
+        
+        &:hover {
+          background-color: var(--f7-list-item-hover-bg-color, rgba(0, 0, 0, 0.03));
+        }
+      }
+    }
+    
+    // 按钮优化
+    .button {
+      min-width: 100px;
+      height: 36px;
+      
+      &.button-large {
+        min-width: 120px;
+        height: 44px;
+      }
+      
+      &.button-small {
+        min-width: 80px;
+        height: 28px;
+        font-size: 12px;
+      }
+    }
+    
+    // 表格优化
+    .data-table {
+      .data-table-header {
+        background-color: var(--f7-bars-bg-color);
+        font-weight: 600;
+      }
+      
+      .data-table-row {
+        &:hover {
+          background-color: var(--f7-list-item-hover-bg-color, rgba(0, 0, 0, 0.03));
+        }
+      }
+    }
+    
+    // 工具栏优化
+    .toolbar {
+      height: 50px;
+      padding: 0 var(--spacing-lg);
+      
+      .toolbar-inner {
+        justify-content: space-between;
+      }
+    }
+    
+    // 弹窗优化
+    .popup {
+      .popup-inner {
+        border-radius: var(--border-radius-lg);
+        max-width: 600px;
+        margin: 0 auto;
+      }
+    }
+    
+    .dialog {
+      .dialog-inner {
+        border-radius: var(--border-radius-lg);
+        max-width: 400px;
+      }
+    }
+    
+    // 侧边栏优化
+    .panel {
+      width: 300px;
+      
+      .panel-backdrop {
+        background-color: rgba(0, 0, 0, 0.3);
+      }
+    }
+    
+    // 标签页优化
+    .tabs {
+      .tab {
+        padding: var(--spacing-lg);
+      }
+    }
+    
+    .segmented {
+      .segmented-button {
+        min-width: 80px;
+        height: 32px;
+      }
+    }
+    
+    // 表单优化
+    .list-input {
+      .item-inner {
+        padding: var(--spacing-md) 0;
+      }
+      
+      .item-input {
+        height: 40px;
+      }
+    }
+    
+    // 进度条优化
+    .progressbar {
+      height: 6px;
+      border-radius: 3px;
+    }
+    
+    // 指标卡片
+    .metric-card {
+      padding: var(--spacing-lg);
+      
+      .metric-value {
+        font-size: 32px;
+        margin-bottom: var(--spacing-sm);
+      }
+      
+      .metric-label {
+        font-size: 14px;
+      }
+    }
+    
+    // 状态指示器
+    .status-indicator {
+      font-size: 14px;
+      
+      .status-icon {
+        width: 16px;
+        height: 16px;
+      }
+    }
+    
+    // 图表容器
+    .chart-container {
+      height: 300px;
+      padding: var(--spacing-md);
+      
+      &.chart-large {
+        height: 400px;
+      }
+      
+      &.chart-small {
+        height: 200px;
+      }
+    }
+    
+    // 网格布局
+    .grid {
+      display: grid;
+      gap: var(--spacing-md);
+      
+      &.grid-2 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      &.grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      
+      &.grid-4 {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+    
+    // 滚动条样式
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: var(--f7-bars-bg-color);
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--f7-bars-border-color);
+      border-radius: 4px;
+      
+      &:hover {
+        background: var(--f7-text-color);
+        opacity: 0.5;
+      }
+    }
+    
+    // 动画效果
+    .fade-enter-active,
+    .fade-leave-active {
+      transition: opacity 0.3s ease;
+    }
+    
+    .fade-enter-from,
+    .fade-leave-to {
+      opacity: 0;
+    }
+    
+    .slide-enter-active,
+    .slide-leave-active {
+      transition: transform 0.3s ease;
+    }
+    
+    .slide-enter-from {
+      transform: translateX(-100%);
+    }
+    
+    .slide-leave-to {
+      transform: translateX(100%);
+    }
+  }
+}

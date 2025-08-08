@@ -1,0 +1,18 @@
+[performance]
+# 设置临时目录到数据目录下
+tmp-storage-path = "/mnt/DATA/datas/tidb/tmp"
+
+[log]
+level = "info"
+
+[server]
+# 设置最大连接数
+max-connections = 1000
+
+[tikv-client]
+# 设置批量大小
+batch-size = 16
+
+[ddl]
+# 设置DDL操作的临时目录
+tmp-dir = "/mnt/DATA/datas/tidb/tmp"

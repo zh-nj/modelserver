@@ -1,0 +1,71 @@
+# Prometheus配置文件
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# 告警规则文件
+rule_files:
+  - "alert_rules.yml"
+
+# 告警管理器配置
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# 抓取配置
+scrape_configs:
+  # LLM推理服务后端
+  - job_name: 'llm-inference-backend'
+    static_configs:
+      - targets: ['llm-backend:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # TiDB监控
+  - job_name: 'tidb'
+    static_configs:
+      - targets: ['tidb:10080']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # PD监控
+  - job_name: 'pd'
+    static_configs:
+      - targets: ['pd:2379']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # TiKV监控
+  - job_name: 'tikv'
+    static_configs:
+      - targets: ['tikv:20160']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Redis监控
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+
+  # Nginx监控
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Node Exporter (系统指标)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 30s
+
+  # GPU监控 (如果有GPU节点)
+  - job_name: 'gpu-exporter'
+    static_configs:
+      - targets: ['gpu-exporter:9400']
+    scrape_interval: 30s

@@ -1,0 +1,32 @@
+[Unit]
+Description=LLM推理服务
+Documentation=https://github.com/your-org/llm-inference-service
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=forking
+RemainAfterExit=yes
+WorkingDirectory=/opt/llm-inference-service
+ExecStart=/usr/local/bin/docker-compose up -d
+ExecStop=/usr/local/bin/docker-compose down
+ExecReload=/usr/local/bin/docker-compose restart
+TimeoutStartSec=0
+Restart=on-failure
+RestartSec=10
+
+# 环境变量
+Environment=COMPOSE_PROJECT_NAME=llm-inference
+Environment=COMPOSE_FILE=docker-compose.yml
+
+# 安全设置
+User=llm-service
+Group=llm-service
+
+# 日志设置
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=llm-inference-service
+
+[Install]
+WantedBy=multi-user.target

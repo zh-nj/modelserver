@@ -1,0 +1,349 @@
+/**
+ * 移动端特定样式
+ */
+
+// 移动端布局
+@media (max-width: 767px) {
+  .mobile {
+    .navbar {
+      height: 44px;
+      
+      .title {
+        font-size: 16px;
+        font-weight: 600;
+      }
+      
+      .nav-left,
+      .nav-right {
+        .link {
+          min-width: 44px;
+          height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+      }
+    }
+    
+    .page-content {
+      padding: var(--spacing-sm);
+    }
+    
+    // 卡片布局优化
+    .card {
+      margin-bottom: var(--spacing-sm);
+      border-radius: var(--border-radius-md);
+      
+      .card-content {
+        padding: var(--spacing-md);
+      }
+    }
+    
+    // 列表优化
+    .list {
+      .list-item {
+        padding: var(--spacing-sm) var(--spacing-md);
+        min-height: 44px;
+        
+        .item-media {
+          min-width: 32px;
+          
+          .icon {
+            width: 24px;
+            height: 24px;
+          }
+        }
+        
+        .item-inner {
+          padding: var(--spacing-xs) 0;
+        }
+        
+        .item-title {
+          font-size: 16px;
+          line-height: 1.4;
+        }
+        
+        .item-subtitle {
+          font-size: 14px;
+          margin-top: 2px;
+        }
+        
+        .item-text {
+          font-size: 12px;
+          margin-top: 4px;
+        }
+        
+        .item-after {
+          font-size: 14px;
+        }
+      }
+    }
+    
+    // 按钮优化
+    .button {
+      min-height: 44px;
+      font-size: 16px;
+      
+      &.button-large {
+        min-height: 50px;
+        font-size: 18px;
+      }
+      
+      &.button-small {
+        min-height: 36px;
+        font-size: 14px;
+      }
+    }
+    
+    // 工具栏优化
+    .toolbar {
+      height: 44px;
+      
+      .toolbar-inner {
+        padding: 0 var(--spacing-md);
+      }
+    }
+    
+    // 标签栏优化
+    .tabbar {
+      height: 50px;
+      
+      .tab-link {
+        height: 50px;
+        
+        .tabbar-label {
+          font-size: 10px;
+          margin-top: 2px;
+        }
+        
+        .icon {
+          width: 24px;
+          height: 24px;
+        }
+      }
+    }
+    
+    // 弹窗优化
+    .popup {
+      .popup-inner {
+        border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+      }
+    }
+    
+    .sheet {
+      .sheet-modal-inner {
+        border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+      }
+    }
+    
+    .actions {
+      .actions-group {
+        border-radius: var(--border-radius-lg);
+        margin: var(--spacing-sm);
+      }
+    }
+    
+    // 表单优化
+    .list-input {
+      .item-inner {
+        padding: var(--spacing-sm) 0;
+      }
+      
+      .item-input {
+        height: 44px;
+        font-size: 16px; // 防止iOS缩放
+      }
+      
+      .item-label {
+        font-size: 14px;
+      }
+    }
+    
+    // 搜索栏优化
+    .searchbar {
+      height: 44px;
+      
+      .searchbar-inner {
+        height: 36px;
+        border-radius: 18px;
+      }
+      
+      .searchbar-input {
+        font-size: 16px; // 防止iOS缩放
+      }
+    }
+    
+    // 分段控制器优化
+    .segmented {
+      height: 32px;
+      
+      .segmented-button {
+        font-size: 14px;
+      }
+    }
+    
+    // 进度条优化
+    .progressbar {
+      height: 4px;
+      border-radius: 2px;
+    }
+    
+    // 指标卡片
+    .metric-card {
+      padding: var(--spacing-md);
+      
+      .metric-value {
+        font-size: 20px;
+        margin-bottom: var(--spacing-xs);
+      }
+      
+      .metric-label {
+        font-size: 11px;
+      }
+    }
+    
+    // 状态指示器
+    .status-indicator {
+      font-size: 12px;
+      
+      .status-icon {
+        width: 14px;
+        height: 14px;
+      }
+    }
+    
+    // 图表容器
+    .chart-container {
+      height: 200px;
+      padding: var(--spacing-sm);
+      
+      &.chart-large {
+        height: 250px;
+      }
+      
+      &.chart-small {
+        height: 150px;
+      }
+    }
+    
+    // 网格布局
+    .grid {
+      display: grid;
+      gap: var(--spacing-sm);
+      
+      &.grid-2 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      &.grid-1 {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    // 触摸优化
+    .touchable {
+      -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      
+      &:active {
+        opacity: 0.7;
+        transform: scale(0.98);
+        transition: all 0.1s ease;
+      }
+    }
+    
+    // 滑动操作
+    .swipe-actions {
+      .swipe-action {
+        min-width: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        .icon {
+          width: 20px;
+          height: 20px;
+        }
+      }
+    }
+    
+    // 下拉刷新
+    .ptr-content {
+      .ptr-preloader {
+        margin-top: 10px;
+      }
+    }
+    
+    // 无限滚动
+    .infinite-scroll-preloader {
+      margin: var(--spacing-md) 0;
+    }
+    
+    // 浮动按钮
+    .fab {
+      width: 56px;
+      height: 56px;
+      bottom: 16px;
+      right: 16px;
+      
+      .icon {
+        width: 24px;
+        height: 24px;
+      }
+    }
+    
+    // 消息提示
+    .toast {
+      border-radius: var(--border-radius-lg);
+      margin: var(--spacing-md);
+    }
+    
+    .notification {
+      border-radius: var(--border-radius-md);
+    }
+    
+    // 安全区域适配
+    .safe-area-top {
+      padding-top: env(safe-area-inset-top);
+    }
+    
+    .safe-area-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    .safe-area-left {
+      padding-left: env(safe-area-inset-left);
+    }
+    
+    .safe-area-right {
+      padding-right: env(safe-area-inset-right);
+    }
+  }
+}
+
+// 平板端适配
+@media (min-width: 768px) and (max-width: 1023px) {
+  .tablet {
+    .page-content {
+      padding: var(--spacing-md);
+    }
+    
+    .grid {
+      &.grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      
+      &.grid-2 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    .chart-container {
+      height: 250px;
+      
+      &.chart-large {
+        height: 350px;
+      }
+    }
+  }
+}
