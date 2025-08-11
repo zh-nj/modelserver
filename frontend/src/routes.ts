@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard.vue'
 import Models from './pages/Models.vue'
 import Monitoring from './pages/Monitoring.vue'
 import Settings from './pages/Settings.vue'
+import Context7 from './pages/Context7.vue'
 
 const routes = [
   {
@@ -33,6 +34,13 @@ const routes = [
     component: Settings,
     options: {
       transition: 'f7-cover'
+    }
+  },
+  {
+    path: '/context7',
+    component: Context7,
+    options: {
+      transition: 'f7-fade'
     }
   }
 ]
