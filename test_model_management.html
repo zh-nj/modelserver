@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模型管理测试页面</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="frontend/css/styles.css">
+</head>
+<body>
+    <div class="container" style="padding: 20px;">
+        <h1>模型管理测试页面</h1>
+        
+        <div class="card" style="margin: 20px 0;">
+            <div class="card-header">
+                <h2>模型列表</h2>
+                <button class="btn btn-primary" onclick="loadModelList()">刷新列表</button>
+            </div>
+            <div class="card-content">
+                <div id="model-list">
+                    <p>点击刷新列表按钮加载模型数据</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" style="margin: 20px 0;">
+            <div class="card-header">
+                <h2>测试操作</h2>
+            </div>
+            <div class="card-content">
+                <button class="btn btn-primary" onclick="showAddModelForm()">添加模型</button>
+                <button class="btn btn-secondary" onclick="testAPI()">测试API连接</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知容器 -->
+    <div id="notification" class="notification"></div>
+
+    <!-- 引入JavaScript文件 -->
+    <script src="frontend/js/app.js"></script>
+    <script src="frontend/js/models.js"></script>
+    <script src="frontend/js/model-form.js"></script>
+    
+    <script>
+        // 测试API连接
+        async function testAPI() {
+            try {
+                const response = await fetch('/api/models/');
+                const data = await response.json();
+                console.log('API测试成功:', data);
+                Utils.showNotification('API连接正常', 'success');
+            } catch (error) {
+                console.error('API测试失败:', error);
+                Utils.showNotification(`API连接失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 页面加载完成后自动加载模型列表
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成，开始测试...');
+            testAPI();
+        });
+    </script>
+</body>
+</html>

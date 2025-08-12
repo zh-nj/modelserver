@@ -24,6 +24,7 @@ class ModelConfigDB(Base):
     
     # GPU和资源配置
     gpu_devices = Column(JSON, nullable=True, comment="指定GPU设备列表")
+    additional_parameters = Column(Text, nullable=True, comment="附加启动参数")
     parameters = Column(JSON, nullable=True, comment="框架特定参数")
     
     # 资源需求

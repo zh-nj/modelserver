@@ -147,7 +147,26 @@ class LlamaCppAdapter(BaseFrameworkAdapter):
         if repeat_penalty is not None:
             cmd.extend(['--repeat-penalty', str(repeat_penalty)])
         
+        # 处理附加参数
+        if config.additional_parameters:
+            additional_args = self._parse_additional_parameters(config.additional_parameters)
+            cmd.extend(additional_args)
+        
         return cmd
+    
+    def _parse_additional_parameters(self, additional_params: str) -> List[str]:
+        """解析附加参数字符串为命令行参数列表"""
+        if not additional_params or not additional_params.strip():
+            return []
+        
+        try:
+            # 简单的参数解析：按空格分割，支持引号
+            import shlex
+            return shlex.split(additional_params.strip())
+        except ValueError as e:
+            logger.warning(f"解析附加参数失败: {e}, 参数: {additional_params}")
+            # 如果shlex解析失败，回退到简单的空格分割
+            return additional_params.strip().split()
     
     def _setup_environment(self, config: ModelConfig) -> Dict[str, str]:
         """设置环境变量"""

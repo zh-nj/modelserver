@@ -25,15 +25,50 @@
             required
           />
           
-          <f7-list-input
-            v-model:value="form.model_path"
-            label="模型路径"
-            type="text"
-            placeholder="输入模型文件路径"
-            :error-message="errors.model_path"
-            :error-message-force="!!errors.model_path"
-            required
-          />
+          <f7-list-item>
+            <f7-input
+              v-model:value="form.model_path"
+              label="模型路径"
+              type="text"
+              placeholder="输入模型文件路径或点击浏览选择"
+              :error-message="errors.model_path"
+              :error-message-force="!!errors.model_path"
+              required
+            />
+            <div slot="after" class="file-selector-container">
+              <f7-button
+                small
+                outline
+                @click="openFileSelector"
+                class="file-selector-btn"
+              >
+                文件
+              </f7-button>
+              <f7-button
+                small
+                outline
+                @click="openFolderSelector"
+                class="file-selector-btn"
+                style="margin-left: 4px;"
+              >
+                文件夹
+              </f7-button>
+              <input
+                ref="fileInput"
+                type="file"
+                accept=".gguf,.bin,.safetensors,.pth,.onnx"
+                @change="handleFileSelect"
+                style="display: none"
+              />
+              <input
+                ref="folderInput"
+                type="file"
+                webkitdirectory
+                @change="handleFolderSelect"
+                style="display: none"
+              />
+            </div>
+          </f7-list-item>
           
           <f7-list-input
             v-model:value="form.priority"
@@ -46,6 +81,24 @@
             :error-message-force="!!errors.priority"
             required
           />
+          
+          <f7-list-item>
+            <f7-input
+              v-model:value="form.additional_parameters"
+              label="附加参数"
+              type="textarea"
+              placeholder="例如: --ctx-size 4096 --n-gpu-layers 32"
+              :error-message="errors.additional_parameters"
+              :error-message-force="!!errors.additional_parameters"
+              resizable
+            />
+            <div slot="footer" class="parameter-help">
+              <small>
+                支持格式：--参数名 值 或 --标志<br>
+                多个参数用空格分隔，例如：--ctx-size 4096 --temperature 0.7
+              </small>
+            </div>
+          </f7-list-item>
         </f7-list>
         
         <f7-block-title>框架配置</f7-block-title>
@@ -296,6 +349,10 @@ const isEdit = computed(() => !!props.model)
 // 可用GPU列表
 const availableGPUs = ref<GPUInfo[]>([])
 
+// 文件输入引用
+const fileInput = ref<HTMLInputElement>()
+const folderInput = ref<HTMLInputElement>()
+
 // 表单数据
 const form = ref<ModelConfig>({
   id: '',
@@ -304,6 +361,7 @@ const form = ref<ModelConfig>({
   model_path: '',
   priority: 5,
   gpu_devices: [],
+  additional_parameters: '',
   parameters: {
     port: 8080,
     host: '0.0.0.0'
@@ -375,6 +433,32 @@ watch(() => form.value.framework, (newFramework) => {
   }
 })
 
+// 监听附加参数变化，实时验证
+watch(() => form.value.additional_parameters, (newParams) => {
+  if (newParams && newParams.trim()) {
+    validateAdditionalParameters(newParams)
+  } else {
+    // 清除参数错误
+    if (errors.value.additional_parameters) {
+      delete errors.value.additional_parameters
+    }
+  }
+})
+
+// 监听模型路径变化，智能填写模型名称
+watch(() => form.value.model_path, (newPath, oldPath) => {
+  // 只有在非编辑模式下才自动填写
+  if (!isEdit.value && newPath.trim()) {
+    // 如果模型名称为空，或者名称是从旧路径自动生成的，则更新名称
+    const oldGeneratedName = oldPath ? generateModelNameFromPath(oldPath) : ''
+    const currentName = form.value.name.trim()
+    
+    if (!currentName || currentName === oldGeneratedName) {
+      form.value.name = generateModelNameFromPath(newPath)
+    }
+  }
+})
+
 // 重置表单
 const resetForm = () => {
   form.value = {
@@ -384,6 +468,7 @@ const resetForm = () => {
     model_path: '',
     priority: 5,
     gpu_devices: [],
+    additional_parameters: '',
     parameters: {
       port: 8080,
       host: '0.0.0.0'
@@ -418,6 +503,33 @@ const toggleGPU = (deviceId: number, checked: boolean) => {
   }
 }
 
+// 验证附加参数格式
+const validateAdditionalParameters = (params: string): boolean => {
+  if (!params.trim()) {
+    return true // 空参数是有效的
+  }
+  
+  // 基本的参数格式验证：检查是否包含 -- 开头的参数
+  const paramPattern = /--[\w-]+(\s+[\w.-]+)?/g
+  const matches = params.match(paramPattern)
+  
+  if (!matches) {
+    errors.value.additional_parameters = '参数格式错误。请使用 --参数名 值 的格式'
+    return false
+  }
+  
+  // 检查是否有未匹配的内容（可能的格式错误）
+  const matchedLength = matches.join(' ').length
+  const cleanParams = params.replace(/\s+/g, ' ').trim()
+  
+  if (matchedLength < cleanParams.length * 0.8) {
+    errors.value.additional_parameters = '参数格式可能有误。请检查参数格式'
+    return false
+  }
+  
+  return true
+}
+
 // 验证表单
 const validateForm = () => {
   errors.value = {}
@@ -438,6 +550,11 @@ const validateForm = () => {
     errors.value.gpu_devices = '至少选择一个GPU设备'
   }
   
+  // 验证附加参数
+  if (form.value.additional_parameters) {
+    validateAdditionalParameters(form.value.additional_parameters)
+  }
+  
   return Object.keys(errors.value).length === 0
 }
 
@@ -446,6 +563,111 @@ const handleSubmit = () => {
   if (validateForm()) {
     emit('submit', { ...form.value })
   }
+}
+
+// 打开文件选择器
+const openFileSelector = () => {
+  if (fileInput.value) {
+    fileInput.value.click()
+  }
+}
+
+// 打开文件夹选择器
+const openFolderSelector = () => {
+  if (folderInput.value) {
+    folderInput.value.click()
+  }
+}
+
+// 处理文件选择
+const handleFileSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  
+  if (file) {
+    // 在浏览器环境中，我们只能获取文件名，不能获取完整路径
+    // 但我们可以显示文件名，让用户知道选择了什么文件
+    form.value.model_path = file.name
+    
+    // 清除可能的路径错误
+    if (errors.value.model_path) {
+      delete errors.value.model_path
+    }
+    
+    // 可以在这里添加文件验证逻辑
+    validateSelectedFile(file)
+  }
+}
+
+// 处理文件夹选择
+const handleFolderSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const files = target.files
+  
+  if (files && files.length > 0) {
+    // 获取第一个文件的路径，提取文件夹路径
+    const firstFile = files[0]
+    const folderPath = firstFile.webkitRelativePath.split('/')[0]
+    
+    // 设置文件夹路径
+    form.value.model_path = folderPath
+    
+    // 清除可能的路径错误
+    if (errors.value.model_path) {
+      delete errors.value.model_path
+    }
+  }
+}
+
+// 验证选择的文件
+const validateSelectedFile = (file: File) => {
+  const allowedExtensions = ['.gguf', '.bin', '.safetensors', '.pth', '.onnx']
+  const fileName = file.name.toLowerCase()
+  
+  const isValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext))
+  
+  if (!isValidExtension) {
+    errors.value.model_path = `不支持的文件格式。支持的格式：${allowedExtensions.join(', ')}`
+  } else {
+    // 清除错误信息
+    if (errors.value.model_path) {
+      delete errors.value.model_path
+    }
+  }
+}
+
+// 从路径生成模型名称
+const generateModelNameFromPath = (path: string): string => {
+  if (!path.trim()) return ''
+  
+  // 移除路径分隔符，获取最后一部分
+  const pathParts = path.replace(/\\/g, '/').split('/')
+  let fileName = pathParts[pathParts.length - 1]
+  
+  // 如果是文件，移除扩展名
+  const fileExtensions = ['.gguf', '.bin', '.safetensors', '.pth', '.onnx']
+  for (const ext of fileExtensions) {
+    if (fileName.toLowerCase().endsWith(ext)) {
+      fileName = fileName.slice(0, -ext.length)
+      break
+    }
+  }
+  
+  // 清理文件名，移除特殊字符，用空格替换下划线和连字符
+  let modelName = fileName
+    .replace(/[_-]/g, ' ')
+    .replace(/[^\w\s\u4e00-\u9fff]/g, '')
+    .trim()
+  
+  // 首字母大写
+  modelName = modelName.replace(/\b\w/g, char => char.toUpperCase())
+  
+  // 如果处理后为空，使用原始文件名
+  if (!modelName) {
+    modelName = fileName || 'New Model'
+  }
+  
+  return modelName
 }
 
 // 加载GPU信息
@@ -480,5 +702,26 @@ onMounted(() => {
 .disabled {
   opacity: 0.5;
   pointer-events: none;
+}
+
+.file-selector-container {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+}
+
+.file-selector-btn {
+  min-width: 60px;
+  height: 32px;
+}
+
+.parameter-help {
+  margin-top: 8px;
+  padding: 8px 0;
+}
+
+.parameter-help small {
+  color: var(--f7-text-color-secondary);
+  line-height: 1.4;
 }
 </style>

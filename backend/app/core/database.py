@@ -120,8 +120,9 @@ class DatabaseManager:
     async def health_check(self) -> bool:
         """数据库健康检查"""
         try:
+            from sqlalchemy import text
             async with AsyncSessionLocal() as session:
-                result = await session.execute("SELECT 1")
+                result = await session.execute(text("SELECT 1"))
                 return result.scalar() == 1
         except Exception as e:
             logger.error(f"数据库健康检查失败: {e}")
@@ -130,9 +131,10 @@ class DatabaseManager:
     async def get_connection_info(self) -> dict:
         """获取数据库连接信息"""
         try:
+            from sqlalchemy import text
             async with AsyncSessionLocal() as session:
                 # 获取数据库版本
-                result = await session.execute("SELECT VERSION()")
+                result = await session.execute(text("SELECT VERSION()"))
                 version = result.scalar()
                 
                 # 获取连接池信息

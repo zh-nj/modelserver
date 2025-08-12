@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模型表单测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .notification { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>模型创建测试</h1>
+    
+    <form id="model-form">
+        <div class="form-group">
+            <label for="model-name">模型名称 *</label>
+            <input type="text" id="model-name" required placeholder="输入模型名称">
+        </div>
+        
+        <div class="form-group">
+            <label for="model-path">模型路径 *</label>
+            <input type="text" id="model-path" required placeholder="输入模型文件路径" value="/tmp/test_models/test_model.gguf">
+        </div>
+        
+        <div class="form-group">
+            <label for="model-framework">推理框架</label>
+            <select id="model-framework">
+                <option value="llama_cpp">llama.cpp</option>
+                <option value="vllm">vLLM</option>
+                <option value="docker">Docker</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="model-priority">优先级 (1-10)</label>
+            <input type="number" id="model-priority" min="1" max="10" value="5">
+        </div>
+        
+        <div class="form-group">
+            <label for="model-gpu-memory">GPU内存需求 (MB)</label>
+            <input type="number" id="model-gpu-memory" min="0" value="4096">
+        </div>
+        
+        <div class="form-group">
+            <label for="model-additional-params">附加参数</label>
+            <textarea id="model-additional-params" rows="3" placeholder="例如: --ctx-size 4096 --n-gpu-layers 32"></textarea>
+        </div>
+        
+        <button type="submit" class="btn-primary">创建模型</button>
+        <button type="button" class="btn-secondary" onclick="loadModels()">加载模型列表</button>
+    </form>
+    
+    <div id="notification"></div>
+    <div id="model-list"></div>
+
+    <script>
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.innerHTML = `<div class="notification ${type}">${message}</div>`;
+            setTimeout(() => {
+                notification.innerHTML = '';
+            }, 5000);
+        }
+
+        async function apiRequest(endpoint, options = {}) {
+            try {
+                const response = await fetch(`http://localhost:8000${endpoint}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API请求失败:', error);
+                throw error;
+            }
+        }
+
+        document.getElementById('model-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const modelId = 'model_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            const formData = {
+                id: modelId,
+                name: document.getElementById('model-name').value,
+                model_path: document.getElementById('model-path').value,
+                framework: document.getElementById('model-framework').value,
+                priority: parseInt(document.getElementById('model-priority').value),
+                gpu_devices: [0],
+                additional_parameters: document.getElementById('model-additional-params').value || null,
+                parameters: {
+                    port: document.getElementById('model-framework').value === 'vllm' ? 8000 : 8080,
+                    host: '0.0.0.0'
+                },
+                resource_requirements: {
+                    gpu_memory: parseInt(document.getElementById('model-gpu-memory').value),
+                    gpu_devices: [0]
+                },
+                health_check: {
+                    enabled: true,
+                    interval: 30,
+                    timeout: 10,
+                    max_failures: 3
+                },
+                retry_policy: {
+                    enabled: true,
+                    max_attempts: 3,
+                    initial_delay: 60,
+                    max_delay: 300,
+                    backoff_factor: 2.0
+                }
+            };
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            try {
+                submitBtn.innerHTML = '创建中...';
+                submitBtn.disabled = true;
+                
+                const response = await apiRequest('/api/models/', {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+                
+                showNotification(`模型 "${formData.name}" 创建成功！ID: ${response.model_id}`, 'success');
+                
+                // 重置表单
+                document.getElementById('model-name').value = '';
+                document.getElementById('model-additional-params').value = '';
+                
+                // 自动加载模型列表
+                setTimeout(loadModels, 1000);
+                
+            } catch (error) {
+                showNotification(`创建模型失败: ${error.message}`, 'error');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+
+        async function loadModels() {
+            const modelListEl = document.getElementById('model-list');
+            
+            try {
+                modelListEl.innerHTML = '<p>正在加载模型列表...</p>';
+                
+                const models = await apiRequest('/api/models/');
+                
+                if (models && models.length > 0) {
+                    let html = '<h3>模型列表</h3><ul>';
+                    models.forEach(model => {
+                        html += `<li><strong>${model.name}</strong> (${model.id}) - 状态: ${model.status} - 框架: ${model.framework}</li>`;
+                    });
+                    html += '</ul>';
+                    modelListEl.innerHTML = html;
+                } else {
+                    modelListEl.innerHTML = '<p>暂无模型配置</p>';
+                }
+            } catch (error) {
+                modelListEl.innerHTML = `<p style="color: red;">加载失败: ${error.message}</p>`;
+            }
+        }
+
+        // 页面加载时自动加载模型列表
+        window.addEventListener('load', loadModels);
+    </script>
+</body>
+</html>

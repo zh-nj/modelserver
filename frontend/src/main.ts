@@ -4,7 +4,7 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import Framework7 from 'framework7/lite-bundle'
-import Framework7Vue from 'framework7-vue/bundle'
+import Framework7Vue, { f7ready } from 'framework7-vue/bundle'
 import App from './App.vue'
 import routes from './routes'
 
@@ -22,7 +22,7 @@ export const f7params = {
     primary: '#007aff',
   },
   routes,
-  
+
   // 桌面端配置
   desktop: {
     enabled: true,
@@ -30,7 +30,7 @@ export const f7params = {
     width: 1200,
     height: 800,
   },
-  
+
   // 移动端配置
   input: {
     scrollIntoViewOnFocus: true,
@@ -39,13 +39,13 @@ export const f7params = {
     iosOverlaysWebView: true,
     androidOverlaysWebView: false,
   },
-  
+
   // 通用配置
   view: {
     pushState: true,
     animate: true,
   },
-  
+
   // 触摸配置
   touch: {
     tapHold: true,
@@ -63,4 +63,28 @@ app.use(Framework7Vue, f7params)
 app.use(createPinia())
 
 // 挂载应用
-app.mount('#app')
+const vueApp = app.mount('#app')
+
+// 将Framework7实例暴露到全局作用域，以便在index.html中访问
+declare global {
+  interface Window {
+    f7: any;
+    vueApp: any;
+  }
+}
+
+// 直接创建Framework7实例并暴露到全局作用域
+const f7Instance = new Framework7(f7params);
+window.f7 = f7Instance;
+window.vueApp = vueApp;
+console.log('Framework7实例已直接创建并暴露到全局作用域');
+
+// 备用方案：通过Vue mixin确保实例可用
+app.mixin({
+  mounted() {
+    if ((this as any).$f7 && !window.f7) {
+      window.f7 = (this as any).$f7;
+      console.log('Framework7实例通过Vue mixin暴露到全局作用域');
+    }
+  }
+});

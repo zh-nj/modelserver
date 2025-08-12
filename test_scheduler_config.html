@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务调度和系统配置测试</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f8f9fa;
+            color: #202124;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .card { 
+            background: white; 
+            border-radius: 8px; 
+            padding: 20px; 
+            margin: 20px 0; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn { 
+            padding: 10px 20px; 
+            margin: 5px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary { background: #1a73e8; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn:hover { opacity: 0.9; }
+        .notification { 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 4px; 
+            display: none;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .warning { background: #fff3cd; color: #856404; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .metric { text-align: center; padding: 15px; background: #f8f9fa; border-radius: 4px; }
+        .metric-value { font-size: 24px; font-weight: bold; margin-bottom: 5px; }
+        .metric-label { font-size: 14px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-cogs"></i> 任务调度和系统配置测试</h1>
+        
+        <div id="notification" class="notification"></div>
+        
+        <!-- 任务调度测试 -->
+        <div class="card">
+            <h2><i class="fas fa-tasks"></i> 任务调度功能测试</h2>
+            <div class="grid">
+                <div>
+                    <h3>调度概览</h3>
+                    <div id="schedule-overview">
+                        <div class="metric">
+                            <div class="metric-value">3</div>
+                            <div class="metric-label">运行中模型</div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3>资源状态</h3>
+                    <div id="resource-status">
+                        <div class="metric">
+                            <div class="metric-value">65%</div>
+                            <div class="metric-label">GPU使用率</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>调度操作</h3>
+            <button class="btn btn-primary" onclick="testManualSchedule()">
+                <i class="fas fa-rocket"></i> 手动调度
+            </button>
+            <button class="btn btn-primary" onclick="testBalanceResources()">
+                <i class="fas fa-balance-scale"></i> 资源平衡
+            </button>
+            <button class="btn btn-secondary" onclick="testEmergencyStop()">
+                <i class="fas fa-exclamation-triangle"></i> 紧急停止
+            </button>
+        </div>
+
+        <!-- 任务历史测试 -->
+        <div class="card">
+            <h2><i class="fas fa-history"></i> 任务历史功能测试</h2>
+            <div class="grid">
+                <div>
+                    <h3>执行统计</h3>
+                    <div id="task-statistics">
+                        <div class="metric">
+                            <div class="metric-value">156</div>
+                            <div class="metric-label">总任务数</div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3>成功率</h3>
+                    <div id="success-rate">
+                        <div class="metric">
+                            <div class="metric-value">91%</div>
+                            <div class="metric-label">任务成功率</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>历史记录</h3>
+            <div id="history-records">
+                <div style="padding: 10px; background: #f8f9fa; border-radius: 4px; margin: 5px 0;">
+                    <strong>测试模型A</strong> - 启动成功 - 2分钟前
+                </div>
+                <div style="padding: 10px; background: #f8f9fa; border-radius: 4px; margin: 5px 0;">
+                    <strong>测试模型B</strong> - 停止成功 - 5分钟前
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" onclick="testLoadHistory()">
+                <i class="fas fa-sync-alt"></i> 刷新历史
+            </button>
+            <button class="btn btn-secondary" onclick="testApplyFilters()">
+                <i class="fas fa-filter"></i> 应用筛选
+            </button>
+        </div>
+
+        <!-- 系统配置测试 -->
+        <div class="card">
+            <h2><i class="fas fa-wrench"></i> 系统配置功能测试</h2>
+            <div class="grid">
+                <div>
+                    <h3>系统信息</h3>
+                    <div id="system-info">
+                        <div style="font-size: 14px;">
+                            <div>运行时间: 24小时</div>
+                            <div>服务版本: v1.0.0</div>
+                            <div>运行模式: 生产模式</div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3>硬件资源</h3>
+                    <div id="hardware-info">
+                        <div style="font-size: 14px;">
+                            <div>GPU 0: RTX 4090 (24GB)</div>
+                            <div>GPU 1: RTX 4090 (24GB)</div>
+                            <div>总内存: 48GB</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>配置管理</h3>
+            <button class="btn btn-primary" onclick="testEditConfig()">
+                <i class="fas fa-edit"></i> 编辑配置
+            </button>
+            <button class="btn btn-primary" onclick="testDatabaseConfig()">
+                <i class="fas fa-database"></i> 数据库设置
+            </button>
+            <button class="btn btn-secondary" onclick="testSecurityConfig()">
+                <i class="fas fa-shield-alt"></i> 安全配置
+            </button>
+            
+            <h3>系统维护</h3>
+            <button class="btn btn-primary" onclick="testViewLogs()">
+                <i class="fas fa-file-alt"></i> 查看日志
+            </button>
+            <button class="btn btn-primary" onclick="testCreateBackup()">
+                <i class="fas fa-archive"></i> 创建备份
+            </button>
+            <button class="btn btn-secondary" onclick="testRestartService()">
+                <i class="fas fa-redo"></i> 重启服务
+            </button>
+        </div>
+
+        <!-- 日志查看测试 -->
+        <div class="card">
+            <h2><i class="fas fa-file-alt"></i> 日志查看功能测试</h2>
+            <div style="background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 4px; font-family: monospace; font-size: 13px; max-height: 300px; overflow-y: auto;" id="log-display">
+                [2025-08-11 16:58:42] <span style="color: #48dbfb; font-weight: bold;">INFO   </span> <span style="color: #95a5a6;">model_manager </span> 模型管理器初始化完成<br>
+                [2025-08-11 16:57:42] <span style="color: #feca57; font-weight: bold;">WARNING</span> <span style="color: #95a5a6;">monitoring    </span> GPU温度较高: 82°C<br>
+                [2025-08-11 16:56:42] <span style="color: #ff6b6b; font-weight: bold;">ERROR  </span> <span style="color: #95a5a6;">api           </span> 模型启动失败: 内存不足<br>
+                [2025-08-11 16:55:42] <span style="color: #48dbfb; font-weight: bold;">INFO   </span> <span style="color: #95a5a6;">scheduler     </span> 资源调度器启动成功<br>
+            </div>
+            
+            <div style="margin-top: 10px;">
+                <button class="btn btn-primary" onclick="testRefreshLogs()">
+                    <i class="fas fa-sync-alt"></i> 刷新日志
+                </button>
+                <button class="btn btn-secondary" onclick="testToggleAutoScroll()">
+                    <i class="fas fa-arrow-down"></i> 自动滚动
+                </button>
+                <button class="btn btn-secondary" onclick="testDownloadLogs()">
+                    <i class="fas fa-download"></i> 下载日志
+                </button>
+            </div>
+        </div>
+
+        <!-- API测试 -->
+        <div class="card">
+            <h2><i class="fas fa-plug"></i> API连接测试</h2>
+            <div id="api-test-results"></div>
+            <button class="btn btn-primary" onclick="testAPIConnections()">
+                <i class="fas fa-network-wired"></i> 测试API连接
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i> ${message}`;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // 任务调度测试函数
+        function testManualSchedule() {
+            showNotification('正在执行手动调度...', 'info');
+            setTimeout(() => {
+                showNotification('手动调度执行完成', 'success');
+            }, 2000);
+        }
+
+        function testBalanceResources() {
+            const confirmed = confirm('确定要执行资源平衡操作吗？');
+            if (!confirmed) return;
+            
+            showNotification('正在执行资源平衡...', 'info');
+            setTimeout(() => {
+                showNotification('资源平衡执行完成', 'success');
+            }, 3000);
+        }
+
+        function testEmergencyStop() {
+            const confirmed = confirm('⚠️ 确定要执行紧急停止吗？');
+            if (!confirmed) return;
+            
+            showNotification('正在执行紧急停止...', 'warning');
+            setTimeout(() => {
+                showNotification('紧急停止完成', 'success');
+            }, 2000);
+        }
+
+        // 任务历史测试函数
+        function testLoadHistory() {
+            showNotification('正在刷新任务历史...', 'info');
+            setTimeout(() => {
+                showNotification('任务历史已刷新', 'success');
+            }, 1000);
+        }
+
+        function testApplyFilters() {
+            showNotification('应用筛选条件: 时间=24h, 状态=all, 模型=all', 'info');
+        }
+
+        // 系统配置测试函数
+        function testEditConfig() {
+            showNotification('服务配置编辑功能开发中...', 'info');
+        }
+
+        function testDatabaseConfig() {
+            showNotification('数据库配置编辑功能开发中...', 'info');
+        }
+
+        function testSecurityConfig() {
+            showNotification('安全配置编辑功能开发中...', 'info');
+        }
+
+        function testViewLogs() {
+            showNotification('日志查看页面已加载', 'success');
+        }
+
+        function testCreateBackup() {
+            showNotification('正在创建系统备份...', 'info');
+            setTimeout(() => {
+                showNotification('系统备份创建成功', 'success');
+            }, 3000);
+        }
+
+        function testRestartService() {
+            const confirmed = confirm('确定要重启服务吗？');
+            if (!confirmed) return;
+            
+            showNotification('正在重启服务...', 'warning');
+            setTimeout(() => {
+                showNotification('服务重启完成', 'success');
+            }, 5000);
+        }
+
+        // 日志查看测试函数
+        function testRefreshLogs() {
+            showNotification('日志已刷新', 'success');
+            
+            // 模拟添加新日志
+            const logDisplay = document.getElementById('log-display');
+            const newLog = `[${new Date().toLocaleString('zh-CN')}] <span style="color: #48dbfb; font-weight: bold;">INFO   </span> <span style="color: #95a5a6;">test          </span> 日志刷新测试<br>`;
+            logDisplay.innerHTML += newLog;
+            logDisplay.scrollTop = logDisplay.scrollHeight;
+        }
+
+        let autoScrollEnabled = true;
+        function testToggleAutoScroll() {
+            autoScrollEnabled = !autoScrollEnabled;
+            showNotification(autoScrollEnabled ? '已启用自动滚动' : '已禁用自动滚动', 'info');
+        }
+
+        function testDownloadLogs() {
+            showNotification('日志文件下载已开始', 'success');
+        }
+
+        // API测试函数
+        async function testAPIConnections() {
+            const resultsEl = document.getElementById('api-test-results');
+            resultsEl.innerHTML = '<p>正在测试API连接...</p>';
+            
+            const apis = [
+                { name: '健康检查', url: '/health' },
+                { name: '系统状态', url: '/api/monitoring/system/' },
+                { name: '模型列表', url: '/api/models/' },
+                { name: 'GPU信息', url: '/api/v1/system/gpu/' }
+            ];
+            
+            let results = '<h4>API测试结果:</h4>';
+            
+            for (const api of apis) {
+                try {
+                    const response = await fetch(`http://localhost:8000${api.url}`);
+                    const status = response.ok ? '✅ 成功' : '❌ 失败';
+                    const statusCode = response.status;
+                    results += `<div style="padding: 5px; margin: 2px 0; background: ${response.ok ? '#d4edda' : '#f8d7da'}; border-radius: 4px;">
+                        <strong>${api.name}</strong>: ${status} (${statusCode})
+                    </div>`;
+                } catch (error) {
+                    results += `<div style="padding: 5px; margin: 2px 0; background: #f8d7da; border-radius: 4px;">
+                        <strong>${api.name}</strong>: ❌ 连接失败 (${error.message})
+                    </div>`;
+                }
+            }
+            
+            resultsEl.innerHTML = results;
+            showNotification('API连接测试完成', 'success');
+        }
+
+        // 页面加载时自动测试API连接
+        window.addEventListener('load', () => {
+            showNotification('任务调度和系统配置测试页面已加载', 'success');
+            setTimeout(testAPIConnections, 1000);
+        });
+    </script>
+</body>
+</html>

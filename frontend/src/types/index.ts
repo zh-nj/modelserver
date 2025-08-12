@@ -10,6 +10,7 @@ export interface ModelConfig {
   model_path: string
   priority: number
   gpu_devices: number[]
+  additional_parameters?: string  // 新增：附加参数
   parameters: Record<string, any>
   resource_requirements: ResourceRequirement
   health_check: HealthCheckConfig

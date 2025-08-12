@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Textarea 值测试</title>
+</head>
+<body>
+    <h1>Textarea 值设置测试</h1>
+    
+    <div id="test-container"></div>
+    
+    <script>
+        // 测试数据
+        const testData = [
+            { name: "null值", value: null },
+            { name: "undefined值", value: undefined },
+            { name: "空字符串", value: "" },
+            { name: "正常参数", value: "--ctx-size 4096 --n-gpu-layers 32" },
+            { name: "包含特殊字符", value: "--param=\"value with spaces\" --flag" }
+        ];
+        
+        const container = document.getElementById('test-container');
+        
+        testData.forEach((test, index) => {
+            // 创建测试区域
+            const testDiv = document.createElement('div');
+            testDiv.style.cssText = 'margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px;';
+            
+            testDiv.innerHTML = `
+                <h3>测试 ${index + 1}: ${test.name}</h3>
+                <p><strong>原始值:</strong> ${JSON.stringify(test.value)}</p>
+                <p><strong>处理后值:</strong> "${test.value || ''}"</p>
+                <textarea id="textarea-${index}" rows="3" style="width: 100%; margin: 10px 0;">${test.value || ''}</textarea>
+                <button onclick="checkValue(${index})">检查实际值</button>
+                <div id="result-${index}" style="margin-top: 10px; font-weight: bold;"></div>
+            `;
+            
+            container.appendChild(testDiv);
+        });
+        
+        function checkValue(index) {
+            const textarea = document.getElementById(`textarea-${index}`);
+            const result = document.getElementById(`result-${index}`);
+            result.innerHTML = `实际 textarea 值: "${textarea.value}"`;
+            result.style.color = textarea.value ? 'green' : 'red';
+        }
+        
+        // 模拟编辑表单的创建过程
+        function simulateEditForm() {
+            const config = {
+                additional_parameters: "--ctx-size 4096 --n-gpu-layers 32 --threads 8"
+            };
+            
+            const formHTML = `
+                <div style="margin: 20px 0; padding: 15px; border: 2px solid #007bff; border-radius: 5px;">
+                    <h3>模拟编辑表单</h3>
+                    <textarea id="simulated-edit-params" rows="3" style="width: 100%;">${config.additional_parameters || ''}</textarea>
+                    <button onclick="checkSimulatedValue()">检查模拟表单值</button>
+                    <div id="simulated-result" style="margin-top: 10px; font-weight: bold;"></div>
+                </div>
+            `;
+            
+            container.innerHTML += formHTML;
+        }
+        
+        function checkSimulatedValue() {
+            const textarea = document.getElementById('simulated-edit-params');
+            const result = document.getElementById('simulated-result');
+            result.innerHTML = `模拟表单 textarea 值: "${textarea.value}"`;
+            result.style.color = textarea.value ? 'green' : 'red';
+        }
+        
+        // 页面加载完成后运行模拟
+        setTimeout(simulateEditForm, 1000);
+    </script>
+</body>
+</html>

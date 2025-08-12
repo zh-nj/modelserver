@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模型详情展开/收起测试</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="frontend/css/styles.css">
+    <style>
+        /* 添加动画效果 */
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                max-height: 1000px;
+                transform: translateY(0);
+            }
+        }
+        
+        .model-details {
+            overflow: hidden;
+        }
+        
+        .model-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+        
+        .model-expand-icon {
+            transition: transform 0.3s ease !important;
+        }
+        
+        /* 详情区域样式增强 */
+        .detail-section {
+            transition: all 0.2s ease;
+        }
+        
+        .detail-section:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .detail-item:hover .detail-value {
+            color: var(--primary-color, #007bff);
+        }
+    </style>
+</head>
+<body>
+    <div class="container" style="padding: 20px;">
+        <h1>模型详情展开/收起功能测试</h1>
+        
+        <div class="card" style="margin: 20px 0;">
+            <div class="card-header">
+                <h2>功能说明</h2>
+            </div>
+            <div class="card-content">
+                <p>这个测试页面验证模型列表的新功能：</p>
+                <ul>
+                    <li>✅ 点击模型项展开详细信息</li>
+                    <li>✅ 再次点击收起详细信息</li>
+                    <li>✅ 展开时显示加载动画</li>
+                    <li>✅ 详细信息包含完整的配置数据</li>
+                    <li>✅ 编辑和删除按钮不触发展开/收起</li>
+                    <li>✅ 展开图标旋转动画</li>
+                </ul>
+                <button class="btn btn-primary" onclick="openModelManagement()">打开模型管理页面</button>
+                <button class="btn btn-secondary" onclick="testDirectToggle()">直接测试展开功能</button>
+            </div>
+        </div>
+        
+        <div class="card" style="margin: 20px 0;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="card-title">
+                    <div class="card-icon success">
+                        <i class="fas fa-list"></i>
+                    </div>
+                    <span>模型列表预览</span>
+                </div>
+                <div class="card-actions" style="display: flex; gap: 8px;">
+                    <button class="btn btn-primary" onclick="loadTestModelList()" style="font-size: 14px;">
+                        <i class="fas fa-sync-alt"></i>
+                        加载测试数据
+                    </button>
+                </div>
+            </div>
+            <div class="card-content">
+                <div id="test-model-list">
+                    <p>点击"加载测试数据"按钮查看模型列表</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" style="margin: 20px 0;">
+            <div class="card-header">
+                <h2>测试结果</h2>
+            </div>
+            <div class="card-content">
+                <div id="test-results">
+                    <p>测试结果将在这里显示</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知容器 -->
+    <div id="notification" class="notification"></div>
+
+    <!-- 引入JavaScript文件 -->
+    <script src="frontend/js/app.js"></script>
+    <script src="frontend/js/navigation.js"></script>
+    <script src="frontend/js/models.js"></script>
+    <script src="frontend/js/model-form.js"></script>
+    
+    <script>
+        // 工具类
+        const Utils = {
+            async apiRequest(url, options = {}) {
+                const defaultOptions = {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                };
+                
+                const finalOptions = { ...defaultOptions, ...options };
+                
+                try {
+                    const response = await fetch(url, finalOptions);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    console.error('API请求失败:', error);
+                    throw error;
+                }
+            },
+            
+            showNotification(message, type = 'info') {
+                const notification = document.getElementById('notification');
+                notification.textContent = message;
+                notification.className = `notification ${type} show`;
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+        };
+
+        // 模拟导航栏更新函数
+        function updateNavbarForPage(title) {
+            console.log('更新导航栏标题:', title);
+        }
+
+        // 加载测试模型列表
+        async function loadTestModelList() {
+            const testModelListDiv = document.getElementById('test-model-list');
+            
+            try {
+                testModelListDiv.innerHTML = '<p>正在加载模型列表...</p>';
+                
+                const models = await Utils.apiRequest('/api/models/');
+                console.log('获取到的模型数据:', models);
+                
+                if (models && models.length > 0) {
+                    let html = '<div class="model-list">';
+                    models.forEach(model => {
+                        const statusClass = model.status === 'running' ? 'success' : 
+                                           model.status === 'stopped' ? 'secondary' : 'error';
+                        
+                        html += `
+                          <div class="model-item" id="test-model-item-${model.id}" style="
+                            padding: 16px;
+                            margin: 8px 0;
+                            background: var(--surface-color);
+                            border-radius: var(--border-radius);
+                            border: 1px solid var(--border-color);
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                          " onclick="toggleModelDetails('${model.id}')">
+                            <!-- 简要信息区域 -->
+                            <div class="model-summary" style="
+                              display: flex;
+                              justify-content: space-between;
+                              align-items: center;
+                            ">
+                              <div class="model-info">
+                                <h4 style="margin: 0 0 4px 0; color: var(--text-primary);">
+                                  <i class="fas fa-chevron-right model-expand-icon" id="expand-icon-${model.id}" style="
+                                    margin-right: 8px;
+                                    font-size: 12px;
+                                    transition: transform 0.3s ease;
+                                    color: var(--text-secondary);
+                                  "></i>
+                                  ${model.name}
+                                </h4>
+                                <div style="font-size: 14px; color: var(--text-secondary);">
+                                  框架: ${model.framework} | 优先级: ${model.priority || 'N/A'}
+                                </div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                                  路径: ${model.model_path}
+                                </div>
+                              </div>
+                              <div class="model-actions" style="display: flex; gap: 8px; align-items: center;">
+                                <span class="status-badge ${statusClass}" style="
+                                  padding: 4px 8px;
+                                  border-radius: 12px;
+                                  font-size: 12px;
+                                  font-weight: 500;
+                                  color: white;
+                                  background: var(--${statusClass === 'success' ? 'secondary' : statusClass === 'secondary' ? 'text-secondary' : 'error'}-color);
+                                ">${model.status || '未知'}</span>
+                                <button class="btn btn-secondary" onclick="event.stopPropagation(); testEditModel('${model.id}')" style="padding: 6px 12px; font-size: 12px;">
+                                  <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-secondary" onclick="event.stopPropagation(); testDeleteModel('${model.id}')" style="padding: 6px 12px; font-size: 12px;">
+                                  <i class="fas fa-trash"></i>
+                                </button>
+                              </div>
+                            </div>
+                            
+                            <!-- 详细信息区域（默认隐藏） -->
+                            <div class="model-details" id="model-details-${model.id}" style="
+                              display: none;
+                              margin-top: 16px;
+                              padding-top: 16px;
+                              border-top: 1px solid var(--border-color);
+                              animation: slideDown 0.3s ease;
+                            ">
+                              <div class="details-loading" id="details-loading-${model.id}">
+                                <p style="color: var(--text-secondary); margin: 0;">
+                                  <i class="fas fa-spinner fa-spin"></i> 正在加载详细信息...
+                                </p>
+                              </div>
+                              <div class="details-content" id="details-content-${model.id}" style="display: none;">
+                                <!-- 详细信息将通过JavaScript动态加载 -->
+                              </div>
+                            </div>
+                          </div>
+                        `;
+                    });
+                    html += '</div>';
+                    testModelListDiv.innerHTML = html;
+                    
+                    Utils.showNotification('模型列表加载成功，点击任意模型查看详情', 'success');
+                    
+                    // 更新测试结果
+                    updateTestResults(`✅ 成功加载 ${models.length} 个模型`);
+                } else {
+                    testModelListDiv.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">暂无模型配置</p>';
+                    updateTestResults('⚠️ 暂无模型数据');
+                }
+                
+            } catch (error) {
+                console.error('加载模型列表失败:', error);
+                testModelListDiv.innerHTML = `<p style="color: var(--error-color);">加载模型列表失败: ${error.message}</p>`;
+                updateTestResults(`❌ 加载失败: ${error.message}`);
+            }
+        }
+
+        // 测试编辑功能
+        function testEditModel(modelId) {
+            Utils.showNotification(`测试编辑模型: ${modelId}`, 'info');
+            updateTestResults(`✅ 编辑按钮点击正常，没有触发展开/收起`);
+        }
+
+        // 测试删除功能
+        function testDeleteModel(modelId) {
+            Utils.showNotification(`测试删除模型: ${modelId}`, 'info');
+            updateTestResults(`✅ 删除按钮点击正常，没有触发展开/收起`);
+        }
+
+        // 直接测试展开功能
+        function testDirectToggle() {
+            // 创建一个模拟的模型项进行测试
+            const testModelId = 'test_direct_toggle';
+            const testContainer = document.getElementById('test-model-list');
+            
+            testContainer.innerHTML = `
+                <div class="model-item" id="test-model-item-${testModelId}" style="
+                    padding: 16px;
+                    margin: 8px 0;
+                    background: var(--surface-color);
+                    border-radius: var(--border-radius);
+                    border: 1px solid var(--border-color);
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                " onclick="toggleModelDetails('${testModelId}')">
+                    <div class="model-summary" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="model-info">
+                            <h4 style="margin: 0 0 4px 0; color: var(--text-primary);">
+                                <i class="fas fa-chevron-right model-expand-icon" id="expand-icon-${testModelId}" style="
+                                    margin-right: 8px;
+                                    font-size: 12px;
+                                    transition: transform 0.3s ease;
+                                    color: var(--text-secondary);
+                                "></i>
+                                测试模型（点击展开详情）
+                            </h4>
+                            <div style="font-size: 14px; color: var(--text-secondary);">
+                                框架: llama_cpp | 优先级: 5
+                            </div>
+                        </div>
+                        <div class="model-actions" style="display: flex; gap: 8px; align-items: center;">
+                            <span class="status-badge secondary" style="
+                                padding: 4px 8px;
+                                border-radius: 12px;
+                                font-size: 12px;
+                                font-weight: 500;
+                                color: white;
+                                background: var(--text-secondary);
+                            ">已停止</span>
+                        </div>
+                    </div>
+                    
+                    <div class="model-details" id="model-details-${testModelId}" style="
+                        display: none;
+                        margin-top: 16px;
+                        padding-top: 16px;
+                        border-top: 1px solid var(--border-color);
+                        animation: slideDown 0.3s ease;
+                    ">
+                        <div class="details-loading" id="details-loading-${testModelId}">
+                            <p style="color: var(--text-secondary); margin: 0;">
+                                <i class="fas fa-spinner fa-spin"></i> 正在加载详细信息...
+                            </p>
+                        </div>
+                        <div class="details-content" id="details-content-${testModelId}" style="display: none;">
+                            <!-- 详细信息将通过JavaScript动态加载 -->
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            Utils.showNotification('创建了测试模型项，点击它来测试展开/收起功能', 'info');
+            updateTestResults('✅ 创建了测试模型项，可以点击测试展开/收起功能');
+        }
+
+        // 更新测试结果
+        function updateTestResults(message) {
+            const resultsDiv = document.getElementById('test-results');
+            const timestamp = new Date().toLocaleTimeString();
+            const currentContent = resultsDiv.innerHTML;
+            
+            if (currentContent.includes('测试结果将在这里显示')) {
+                resultsDiv.innerHTML = `<p>[${timestamp}] ${message}</p>`;
+            } else {
+                resultsDiv.innerHTML = currentContent + `<p>[${timestamp}] ${message}</p>`;
+            }
+        }
+
+        // 页面加载完成后的提示
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('模型详情展开/收起测试页面加载完成');
+            Utils.showNotification('测试页面加载完成，可以开始测试模型详情展开/收起功能', 'success');
+            updateTestResults('📋 测试页面初始化完成');
+        });
+
+        // 重写 toggleModelDetails 函数以添加测试日志
+        const originalToggleModelDetails = toggleModelDetails;
+        window.toggleModelDetails = async function(modelId) {
+            updateTestResults(`🔄 开始切换模型 ${modelId} 的详情显示状态`);
+            
+            const detailsDiv = document.getElementById(`model-details-${modelId}`);
+            const isCurrentlyHidden = detailsDiv && detailsDiv.style.display === 'none';
+            
+            if (isCurrentlyHidden) {
+                updateTestResults(`📖 展开模型 ${modelId} 的详细信息`);
+            } else {
+                updateTestResults(`📕 收起模型 ${modelId} 的详细信息`);
+            }
+            
+            try {
+                await originalToggleModelDetails(modelId);
+                updateTestResults(`✅ 模型 ${modelId} 详情切换成功`);
+            } catch (error) {
+                updateTestResults(`❌ 模型 ${modelId} 详情切换失败: ${error.message}`);
+            }
+        };
+    </script>
+</body>
+</html>

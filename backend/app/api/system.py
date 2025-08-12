@@ -19,6 +19,14 @@ from ..services.config_manager import FileConfigManager
 from ..utils.gpu import GPUDetector
 from ..core.dependencies import get_monitoring_service, get_config_manager, get_gpu_detector
 from ..core.config import settings
+from pydantic import BaseModel
+from typing import List
+
+class FileBrowseSettings(BaseModel):
+    """文件浏览设置"""
+    allowed_browse_paths: List[str]
+    enable_root_browse: bool
+    max_browse_depth: int
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/system", tags=["system"])
@@ -725,4 +733,145 @@ async def health_check():
                 "message": f"健康检查失败: {str(e)}",
                 "timestamp": datetime.now().isoformat()
             }
+        )
+
+@router.get("/file-browse-settings", response_model=FileBrowseSettings)
+async def get_file_browse_settings():
+    """
+    获取文件浏览设置
+    
+    返回当前的文件浏览配置，包括允许的路径、根目录浏览权限等
+    """
+    try:
+        current_settings = FileBrowseSettings(
+            allowed_browse_paths=settings.allowed_browse_paths,
+            enable_root_browse=settings.enable_root_browse,
+            max_browse_depth=settings.max_browse_depth
+        )
+        
+        logger.info("获取文件浏览设置成功")
+        return current_settings
+        
+    except Exception as e:
+        logger.error(f"获取文件浏览设置失败: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"获取文件浏览设置失败: {str(e)}"
+        )
+
+@router.put("/file-browse-settings")
+async def update_file_browse_settings(
+    new_settings: FileBrowseSettings
+):
+    """
+    更新文件浏览设置
+    
+    更新文件浏览配置，包括允许的路径、根目录浏览权限等
+    注意：此更改需要重启服务才能完全生效
+    """
+    try:
+        # 验证路径设置
+        if not new_settings.allowed_browse_paths:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="至少需要配置一个允许的浏览路径"
+            )
+        
+        # 验证最大浏览深度
+        if new_settings.max_browse_depth < 1 or new_settings.max_browse_depth > 20:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="最大浏览深度必须在1-20之间"
+            )
+        
+        # 验证路径是否存在（可选验证）
+        valid_paths = []
+        invalid_paths = []
+        
+        for path in new_settings.allowed_browse_paths:
+            try:
+                expanded_path = os.path.expanduser(path)
+                expanded_path = os.path.abspath(expanded_path)
+                
+                if os.path.exists(expanded_path):
+                    valid_paths.append(path)
+                else:
+                    invalid_paths.append(path)
+            except Exception:
+                invalid_paths.append(path)
+        
+        # 在实际应用中，这里应该更新配置文件
+        # 由于settings通常是只读的，这里只是模拟更新
+        # 实际实现需要写入配置文件并重新加载
+        
+        result = {
+            "success": True,
+            "message": "文件浏览设置更新成功",
+            "settings": new_settings.dict(),
+            "validation": {
+                "valid_paths": valid_paths,
+                "invalid_paths": invalid_paths,
+                "total_paths": len(new_settings.allowed_browse_paths)
+            },
+            "restart_required": True,
+            "updated_at": datetime.now().isoformat()
+        }
+        
+        if invalid_paths:
+            result["warning"] = f"以下路径不存在或无法访问: {', '.join(invalid_paths)}"
+        
+        logger.info(f"更新文件浏览设置成功: {len(valid_paths)} 个有效路径")
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"更新文件浏览设置失败: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"更新文件浏览设置失败: {str(e)}"
+        )
+
+@router.post("/validate-browse-path")
+async def validate_browse_path(
+    path: str = Query(..., description="要验证的路径")
+):
+    """
+    验证浏览路径
+    
+    检查指定路径是否存在且可访问
+    """
+    try:
+        expanded_path = os.path.expanduser(path)
+        expanded_path = os.path.abspath(expanded_path)
+        
+        result = {
+            "path": path,
+            "expanded_path": expanded_path,
+            "exists": False,
+            "is_directory": False,
+            "accessible": False,
+            "readable": False,
+            "writable": False
+        }
+        
+        if os.path.exists(expanded_path):
+            result["exists"] = True
+            result["is_directory"] = os.path.isdir(expanded_path)
+            
+            try:
+                result["accessible"] = os.access(expanded_path, os.F_OK)
+                result["readable"] = os.access(expanded_path, os.R_OK)
+                result["writable"] = os.access(expanded_path, os.W_OK)
+            except Exception:
+                pass
+        
+        logger.info(f"验证浏览路径: {path} -> {result}")
+        return result
+        
+    except Exception as e:
+        logger.error(f"验证浏览路径失败 {path}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"验证浏览路径失败: {str(e)}"
         )

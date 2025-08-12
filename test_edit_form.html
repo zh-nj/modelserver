@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑表单测试</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="frontend/css/styles.css">
+</head>
+<body>
+    <div class="container" style="padding: 20px;">
+        <h1>编辑表单测试</h1>
+        
+        <div class="card" style="margin: 20px 0;">
+            <div class="card-header">
+                <h2>测试数据</h2>
+            </div>
+            <div class="card-content">
+                <button class="btn btn-primary" onclick="testWithNullParams()">测试 null 附加参数</button>
+                <button class="btn btn-primary" onclick="testWithParams()">测试有附加参数</button>
+                <button class="btn btn-secondary" onclick="testRealModel()">测试真实模型</button>
+            </div>
+        </div>
+        
+        <div id="test-results" style="margin: 20px 0;">
+            <p>点击测试按钮查看结果</p>
+        </div>
+    </div>
+
+    <!-- 通知容器 -->
+    <div id="notification" class="notification"></div>
+
+    <!-- 引入JavaScript文件 -->
+    <script src="frontend/js/app.js"></script>
+    <script src="frontend/js/model-form.js"></script>
+    
+    <script>
+        // 测试用的模型配置数据
+        const testConfigWithNull = {
+            id: "test_model_1",
+            name: "测试模型1",
+            framework: "llama_cpp",
+            model_path: "/test/model1.gguf",
+            priority: 5,
+            additional_parameters: null,
+            resource_requirements: {
+                gpu_memory: 4096
+            }
+        };
+        
+        const testConfigWithParams = {
+            id: "test_model_2",
+            name: "测试模型2",
+            framework: "vllm",
+            model_path: "/test/model2.gguf",
+            priority: 8,
+            additional_parameters: "--ctx-size 4096 --n-gpu-layers 32",
+            resource_requirements: {
+                gpu_memory: 8192
+            }
+        };
+
+        function testWithNullParams() {
+            console.log('测试 null 附加参数:', testConfigWithNull);
+            showEditModelForm(testConfigWithNull);
+            
+            // 检查表单字段值
+            setTimeout(() => {
+                const additionalParamsField = document.getElementById('edit-model-additional-params');
+                const results = document.getElementById('test-results');
+                results.innerHTML = `
+                    <h3>测试结果 - null 附加参数</h3>
+                    <p><strong>配置中的值:</strong> ${JSON.stringify(testConfigWithNull.additional_parameters)}</p>
+                    <p><strong>表单字段值:</strong> "${additionalParamsField ? additionalParamsField.value : '字段不存在'}"</p>
+                    <p><strong>字段是否存在:</strong> ${additionalParamsField ? '是' : '否'}</p>
+                `;
+            }, 100);
+        }
+
+        function testWithParams() {
+            console.log('测试有附加参数:', testConfigWithParams);
+            showEditModelForm(testConfigWithParams);
+            
+            // 检查表单字段值
+            setTimeout(() => {
+                const additionalParamsField = document.getElementById('edit-model-additional-params');
+                const results = document.getElementById('test-results');
+                results.innerHTML = `
+                    <h3>测试结果 - 有附加参数</h3>
+                    <p><strong>配置中的值:</strong> "${testConfigWithParams.additional_parameters}"</p>
+                    <p><strong>表单字段值:</strong> "${additionalParamsField ? additionalParamsField.value : '字段不存在'}"</p>
+                    <p><strong>字段是否存在:</strong> ${additionalParamsField ? '是' : '否'}</p>
+                `;
+            }, 100);
+        }
+
+        async function testRealModel() {
+            try {
+                const config = await Utils.apiRequest('/api/models/model_1754964995132_3nk3ftshc/config');
+                console.log('真实模型配置:', config);
+                showEditModelForm(config);
+                
+                // 检查表单字段值
+                setTimeout(() => {
+                    const additionalParamsField = document.getElementById('edit-model-additional-params');
+                    const results = document.getElementById('test-results');
+                    results.innerHTML = `
+                        <h3>测试结果 - 真实模型</h3>
+                        <p><strong>配置中的值:</strong> ${JSON.stringify(config.additional_parameters)}</p>
+                        <p><strong>表单字段值:</strong> "${additionalParamsField ? additionalParamsField.value : '字段不存在'}"</p>
+                        <p><strong>字段是否存在:</strong> ${additionalParamsField ? '是' : '否'}</p>
+                        <p><strong>模型名称:</strong> ${config.name}</p>
+                    `;
+                }, 100);
+            } catch (error) {
+                console.error('获取真实模型配置失败:', error);
+                document.getElementById('test-results').innerHTML = `
+                    <h3>错误</h3>
+                    <p style="color: red;">获取真实模型配置失败: ${error.message}</p>
+                `;
+            }
+        }
+
+        // 工具类
+        const Utils = {
+            async apiRequest(url, options = {}) {
+                const defaultOptions = {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                };
+                
+                const finalOptions = { ...defaultOptions, ...options };
+                
+                try {
+                    const response = await fetch(url, finalOptions);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    console.error('API请求失败:', error);
+                    throw error;
+                }
+            },
+            
+            showNotification(message, type = 'info') {
+                console.log(`通知 [${type}]: ${message}`);
+            }
+        };
+    </script>
+</body>
+</html>

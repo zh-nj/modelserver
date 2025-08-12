@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模型垂直布局验证测试</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="frontend/css/styles.css">
+    <style>
+        /* 添加动画效果 */
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                max-height: 2000px;
+                transform: translateY(0);
+            }
+        }
+        
+        .model-details {
+            overflow: hidden;
+        }
+        
+        .model-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+        
+        .model-expand-icon {
+            transition: transform 0.3s ease !important;
+        }
+        
+        /* 详情区域样式增强 */
+        .detail-section {
+            transition: all 0.2s ease;
+        }
+        
+        .detail-section:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .detail-item:hover .detail-value {
+            color: var(--primary-color, #007bff);
+        }
+        
+        /* 高亮显示布局结构 */
+        .layout-debug .model-item {
+            border: 2px solid #007bff !important;
+            position: relative;
+        }
+        
+        .layout-debug .model-item::before {
+            content: "flex-direction: column";
+            position: absolute;
+            top: -20px;
+            left: 0;
+            background: #007bff;
+            color: white;
+            padding: 2px 6px;
+            font-size: 10px;
+            border-radius: 3px;
+        }
+        
+        .layout-debug .model-summary {
+            border: 1px dashed #28a745 !important;
+            position: relative;
+        }
+        
+        .layout-debug .model-summary::before {
+            content: "水平布局区域";
+            position: absolute;
+            top: -15px;
+            right: 0;
+            background: #28a745;
+            color: white;
+            padding: 1px 4px;
+            font-size: 9px;
+            border-radius: 2px;
+        }
+        
+        .layout-debug .model-details {
+            border: 1px dashed #dc3545 !important;
+            position: relative;
+        }
+        
+        .layout-debug .model-details::before {
+            content: "垂直详情区域";
+            position: absolute;
+            top: -15px;
+            right: 0;
+            background: #dc3545;
+            color: white;
+            padding: 1px 4px;
+            font-size: 9px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" style="padding: 20px;">
+        <h1>模型垂直布局验证测试</h1>
+        
+        <div class="card" style="margin: 20px 0;">
+            <div class="card-header">
+                <h2>布局修改确认</h2>
+            </div>
+            <div class="card-content">
+                <p>已成功修改模型项的布局结构：</p>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                    <h4>修改内容：</h4>
+                    <ul>
+                        <li>✅ <code>model-item</code> 添加了 <code>display: flex</code></li>
+                        <li>✅ <code>model-item</code> 添加了 <code>flex-direction: column</code></li>
+                        <li>✅ <code>model-details-grid</code> 使用 <code>flex-direction: column</code></li>
+                        <li>✅ 详情区域在模型项下方垂直展开</li>
+                    </ul>
+                </div>
+                
+                <div class="btn-group" style="margin: 15px 0;">
+                    <button class="btn btn-primary" onclick="loadTestModelList()">加载模型列表</button>
+                    <button class="btn btn-secondary" onclick="toggleLayoutDebug()">切换布局调试模式</button>
+                    <button class="btn" onclick="openModelManagement()">打开模型管理页面</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" style="margin: 20px 0;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="card-title">
+                    <div class="card-icon success">
+                        <i class="fas fa-list"></i>
+                    </div>
+                    <span>垂直布局模型列表</span>
+                </div>
+                <div class="card-actions" style="display: flex; gap: 8px;">
+                    <button class="btn btn-primary" onclick="loadTestModelList()" style="font-size: 14px;">
+                        <i class="fas fa-sync-alt"></i>
+                        刷新列表
+                    </button>
+                </div>
+            </div>
+            <div class="card-content">
+                <div id="test-model-list">
+                    <p>点击"刷新列表"按钮加载模型数据，然后点击任意模型查看垂直布局效果</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" style="margin: 20px 0;">
+            <div class="card-header">
+                <h2>布局结构说明</h2>
+            </div>
+            <div class="card-content">
+                <div style="font-family: monospace; background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                    <div style="color: #007bff; font-weight: bold;">model-item (flex-direction: column)</div>
+                    <div style="margin-left: 20px;">
+                        <div style="color: #28a745; font-weight: bold;">├── model-summary (flex水平布局)</div>
+                        <div style="margin-left: 20px;">
+                            <div>│   ├── model-info (模型基本信息)</div>
+                            <div>│   └── model-actions (操作按钮)</div>
+                        </div>
+                        <div style="color: #dc3545; font-weight: bold;">└── model-details (垂直展开)</div>
+                        <div style="margin-left: 20px;">
+                            <div>    └── model-details-grid (flex-direction: column)</div>
+                            <div style="margin-left: 20px;">
+                                <div>        ├── 基本信息</div>
+                                <div>        ├── 资源配置</div>
+                                <div>        ├── 服务配置</div>
+                                <div>        ├── 健康检查</div>
+                                <div>        └── 重试策略</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" style="margin: 20px 0;">
+            <div class="card-header">
+                <h2>测试结果</h2>
+            </div>
+            <div class="card-content">
+                <div id="test-results">
+                    <p>测试结果将在这里显示</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知容器 -->
+    <div id="notification" class="notification"></div>
+
+    <!-- 引入JavaScript文件 -->
+    <script src="frontend/js/app.js"></script>
+    <script src="frontend/js/navigation.js"></script>
+    <script src="frontend/js/models.js"></script>
+    <script src="frontend/js/model-form.js"></script>
+    
+    <script>
+        let layoutDebugMode = false;
+        
+        // 工具类
+        const Utils = {
+            async apiRequest(url, options = {}) {
+                const defaultOptions = {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                };
+                
+                const finalOptions = { ...defaultOptions, ...options };
+                
+                try {
+                    const response = await fetch(url, finalOptions);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    console.error('API请求失败:', error);
+                    throw error;
+                }
+            },
+            
+            showNotification(message, type = 'info') {
+                const notification = document.getElementById('notification');
+                notification.textContent = message;
+                notification.className = `notification ${type} show`;
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+        };
+
+        // 模拟导航栏更新函数
+        function updateNavbarForPage(title) {
+            console.log('更新导航栏标题:', title);
+        }
+
+        // 切换布局调试模式
+        function toggleLayoutDebug() {
+            layoutDebugMode = !layoutDebugMode;
+            const testModelList = document.getElementById('test-model-list');
+            
+            if (layoutDebugMode) {
+                testModelList.classList.add('layout-debug');
+                Utils.showNotification('布局调试模式已开启，可以看到布局结构边框', 'info');
+                updateTestResults('🔍 开启布局调试模式，显示布局结构边框');
+            } else {
+                testModelList.classList.remove('layout-debug');
+                Utils.showNotification('布局调试模式已关闭', 'info');
+                updateTestResults('👁️ 关闭布局调试模式');
+            }
+        }
+
+        // 加载测试模型列表
+        async function loadTestModelList() {
+            const testModelListDiv = document.getElementById('test-model-list');
+            
+            try {
+                testModelListDiv.innerHTML = '<p>正在加载模型列表...</p>';
+                
+                const models = await Utils.apiRequest('/api/models/');
+                console.log('获取到的模型数据:', models);
+                
+                if (models && models.length > 0) {
+                    let html = '<div class="model-list">';
+                    models.forEach(model => {
+                        const statusClass = model.status === 'running' ? 'success' : 
+                                           model.status === 'stopped' ? 'secondary' : 'error';
+                        
+                        html += `
+                          <div class="model-item" id="test-model-item-${model.id}" style="
+                            display: flex;
+                            flex-direction: column;
+                            padding: 16px;
+                            margin: 8px 0;
+                            background: var(--surface-color);
+                            border-radius: var(--border-radius);
+                            border: 1px solid var(--border-color);
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                          " onclick="toggleModelDetails('${model.id}')">
+                            <!-- 简要信息区域 -->
+                            <div class="model-summary" style="
+                              display: flex;
+                              justify-content: space-between;
+                              align-items: center;
+                            ">
+                              <div class="model-info">
+                                <h4 style="margin: 0 0 4px 0; color: var(--text-primary);">
+                                  <i class="fas fa-chevron-right model-expand-icon" id="expand-icon-${model.id}" style="
+                                    margin-right: 8px;
+                                    font-size: 12px;
+                                    transition: transform 0.3s ease;
+                                    color: var(--text-secondary);
+                                  "></i>
+                                  ${model.name}
+                                </h4>
+                                <div style="font-size: 14px; color: var(--text-secondary);">
+                                  框架: ${model.framework} | 优先级: ${model.priority || 'N/A'}
+                                </div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                                  路径: ${model.model_path}
+                                </div>
+                              </div>
+                              <div class="model-actions" style="display: flex; gap: 8px; align-items: center;">
+                                <span class="status-badge ${statusClass}" style="
+                                  padding: 4px 8px;
+                                  border-radius: 12px;
+                                  font-size: 12px;
+                                  font-weight: 500;
+                                  color: white;
+                                  background: var(--${statusClass === 'success' ? 'secondary' : statusClass === 'secondary' ? 'text-secondary' : 'error'}-color);
+                                ">${model.status || '未知'}</span>
+                                <button class="btn btn-secondary" onclick="event.stopPropagation(); testEditModel('${model.id}')" style="padding: 6px 12px; font-size: 12px;">
+                                  <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-secondary" onclick="event.stopPropagation(); testDeleteModel('${model.id}')" style="padding: 6px 12px; font-size: 12px;">
+                                  <i class="fas fa-trash"></i>
+                                </button>
+                              </div>
+                            </div>
+                            
+                            <!-- 详细信息区域（默认隐藏） -->
+                            <div class="model-details" id="model-details-${model.id}" style="
+                              display: none;
+                              margin-top: 16px;
+                              padding-top: 16px;
+                              border-top: 1px solid var(--border-color);
+                              animation: slideDown 0.3s ease;
+                            ">
+                              <div class="details-loading" id="details-loading-${model.id}">
+                                <p style="color: var(--text-secondary); margin: 0;">
+                                  <i class="fas fa-spinner fa-spin"></i> 正在加载详细信息...
+                                </p>
+                              </div>
+                              <div class="details-content" id="details-content-${model.id}" style="display: none;">
+                                <!-- 详细信息将通过JavaScript动态加载 -->
+                              </div>
+                            </div>
+                          </div>
+                        `;
+                    });
+                    html += '</div>';
+                    testModelListDiv.innerHTML = html;
+                    
+                    // 如果调试模式开启，重新应用调试样式
+                    if (layoutDebugMode) {
+                        testModelListDiv.classList.add('layout-debug');
+                    }
+                    
+                    Utils.showNotification('模型列表加载成功，点击任意模型查看垂直布局效果', 'success');
+                    updateTestResults(`✅ 成功加载 ${models.length} 个模型，使用垂直布局结构`);
+                    updateTestResults(`📐 model-item 使用 flex-direction: column 布局`);
+                } else {
+                    testModelListDiv.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">暂无模型配置</p>';
+                    updateTestResults('⚠️ 暂无模型数据');
+                }
+                
+            } catch (error) {
+                console.error('加载模型列表失败:', error);
+                testModelListDiv.innerHTML = `<p style="color: var(--error-color);">加载模型列表失败: ${error.message}</p>`;
+                updateTestResults(`❌ 加载失败: ${error.message}`);
+            }
+        }
+
+        // 测试编辑功能
+        function testEditModel(modelId) {
+            Utils.showNotification(`测试编辑模型: ${modelId}`, 'info');
+            updateTestResults(`✅ 编辑按钮点击正常，没有触发展开/收起`);
+        }
+
+        // 测试删除功能
+        function testDeleteModel(modelId) {
+            Utils.showNotification(`测试删除模型: ${modelId}`, 'info');
+            updateTestResults(`✅ 删除按钮点击正常，没有触发展开/收起`);
+        }
+
+        // 更新测试结果
+        function updateTestResults(message) {
+            const resultsDiv = document.getElementById('test-results');
+            const timestamp = new Date().toLocaleTimeString();
+            const currentContent = resultsDiv.innerHTML;
+            
+            if (currentContent.includes('测试结果将在这里显示')) {
+                resultsDiv.innerHTML = `<p>[${timestamp}] ${message}</p>`;
+            } else {
+                resultsDiv.innerHTML = currentContent + `<p>[${timestamp}] ${message}</p>`;
+            }
+        }
+
+        // 页面加载完成后的提示
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('模型垂直布局验证测试页面加载完成');
+            Utils.showNotification('垂直布局验证页面加载完成，可以测试新的布局结构', 'success');
+            updateTestResults('📋 垂直布局验证测试页面初始化完成');
+            updateTestResults('🔧 model-item 已配置为 flex-direction: column');
+        });
+
+        // 重写 toggleModelDetails 函数以添加测试日志
+        const originalToggleModelDetails = toggleModelDetails;
+        window.toggleModelDetails = async function(modelId) {
+            updateTestResults(`🔄 开始切换模型 ${modelId} 的详情显示状态（垂直布局）`);
+            
+            const detailsDiv = document.getElementById(`model-details-${modelId}`);
+            const isCurrentlyHidden = detailsDiv && detailsDiv.style.display === 'none';
+            
+            if (isCurrentlyHidden) {
+                updateTestResults(`📖 展开模型 ${modelId} 的详细信息（垂直排列在下方）`);
+            } else {
+                updateTestResults(`📕 收起模型 ${modelId} 的详细信息`);
+            }
+            
+            try {
+                await originalToggleModelDetails(modelId);
+                updateTestResults(`✅ 模型 ${modelId} 详情切换成功，详情以垂直布局显示在模型项下方`);
+                
+                // 验证布局结构
+                const modelItem = document.getElementById(`test-model-item-${modelId}`);
+                if (modelItem) {
+                    const computedStyle = window.getComputedStyle(modelItem);
+                    const flexDirection = computedStyle.flexDirection;
+                    updateTestResults(`🔍 验证布局: model-item 的 flex-direction = "${flexDirection}"`);
+                }
+            } catch (error) {
+                updateTestResults(`❌ 模型 ${modelId} 详情切换失败: ${error.message}`);
+            }
+        };
+    </script>
+</body>
+</html>

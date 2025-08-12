@@ -46,6 +46,14 @@ app.include_router(config.router)
 app.include_router(websocket.router)
 app.include_router(alerts.router)
 
+# 导入并注册文件浏览API
+from .api import files
+app.include_router(files.router)
+
+# 导入并注册调度器API
+from .api import scheduler
+app.include_router(scheduler.router)
+
 # 添加兼容性路由（无版本前缀）
 from fastapi import APIRouter, Depends
 from .core.dependencies import get_monitoring_service

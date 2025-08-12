@@ -34,6 +34,24 @@ class Settings(BaseSettings):
     default_model_timeout: int = 300  # 秒
     max_concurrent_models: int = 10
     
+    # 文件浏览配置
+    allowed_browse_paths: List[str] = [
+        "/",  # 系统根目录
+        "/models",
+        "/data/models", 
+        "/home/models",
+        "/opt/models",
+        "/usr/local/models",
+        "/var/lib/models",
+        "./models",
+        "../models",
+        "~/models",
+        "/mnt/models",
+        "/storage/models"
+    ]
+    enable_root_browse: bool = True  # 是否允许浏览系统根目录
+    max_browse_depth: int = 10  # 最大浏览深度
+    
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

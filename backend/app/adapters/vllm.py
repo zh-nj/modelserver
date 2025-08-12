@@ -151,6 +151,11 @@ class VllmAdapter(BaseFrameworkAdapter):
         if params.get('disable_log_stats', False):
             cmd.append('--disable-log-stats')
         
+        # 处理附加参数
+        if config.additional_parameters:
+            additional_args = self._parse_additional_parameters(config.additional_parameters)
+            cmd.extend(additional_args)
+        
         docker_config['command'] = cmd
         
         # 挂载卷
@@ -192,6 +197,20 @@ class VllmAdapter(BaseFrameworkAdapter):
         docker_config['environment'].update(env_vars)
         
         return docker_config
+    
+    def _parse_additional_parameters(self, additional_params: str) -> List[str]:
+        """解析附加参数字符串为命令行参数列表"""
+        if not additional_params or not additional_params.strip():
+            return []
+        
+        try:
+            # 简单的参数解析：按空格分割，支持引号
+            import shlex
+            return shlex.split(additional_params.strip())
+        except ValueError as e:
+            logger.warning(f"解析附加参数失败: {e}, 参数: {additional_params}")
+            # 如果shlex解析失败，回退到简单的空格分割
+            return additional_params.strip().split()
     
     async def _pull_image_if_needed(self, image: str) -> bool:
         """如果需要则拉取Docker镜像"""

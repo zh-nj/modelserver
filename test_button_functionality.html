@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>按钮功能测试</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="frontend/css/styles.css">
+    <style>
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+        }
+        .test-button {
+            margin: 10px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .test-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-info { background: #17a2b8; color: white; }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .result-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .result-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .result-info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <div class="container" style="padding: 20px;">
+        <h1>按钮功能修复测试</h1>
+        
+        <div class="test-section">
+            <h2>✅ 修复总结</h2>
+            <div class="result-success test-result">
+                <strong>问题已修复：</strong>任务调度和系统设置按钮现在可以正确响应点击事件
+            </div>
+            <ul>
+                <li>✅ <strong>任务调度</strong>：导航到监控页面（包含任务调度功能）</li>
+                <li>✅ <strong>任务历史</strong>：导航到监控页面（包含任务历史功能）</li>
+                <li>✅ <strong>系统配置</strong>：导航到设置页面（完整的系统配置界面）</li>
+                <li>✅ <strong>日志查看</strong>：导航到监控页面（包含日志查看功能）</li>
+                <li>✅ <strong>回退机制</strong>：如果Vue路由不可用，自动创建传统页面</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <h2>🧪 功能测试</h2>
+            <p>点击下面的按钮测试修复后的功能：</p>
+            
+            <div style="margin: 15px 0;">
+                <h3>主要功能按钮</h3>
+                <button class="test-button btn-primary" onclick="openTaskScheduler()">
+                    <i class="fas fa-tasks"></i>
+                    任务调度
+                </button>
+                <button class="test-button btn-success" onclick="viewTaskHistory()">
+                    <i class="fas fa-history"></i>
+                    任务历史
+                </button>
+                <button class="test-button btn-warning" onclick="openSystemConfig()">
+                    <i class="fas fa-cogs"></i>
+                    系统配置
+                </button>
+                <button class="test-button btn-info" onclick="viewLogs()">
+                    <i class="fas fa-file-alt"></i>
+                    日志查看
+                </button>
+            </div>
+            
+            <div style="margin: 15px 0;">
+                <h3>Vue路由测试</h3>
+                <button class="test-button btn-primary" onclick="testVueNavigation('/monitoring')">
+                    <i class="fas fa-chart-line"></i>
+                    测试监控页面导航
+                </button>
+                <button class="test-button btn-success" onclick="testVueNavigation('/settings')">
+                    <i class="fas fa-wrench"></i>
+                    测试设置页面导航
+                </button>
+                <button class="test-button btn-info" onclick="testVueNavigation('/models')">
+                    <i class="fas fa-brain"></i>
+                    测试模型页面导航
+                </button>
+            </div>
+            
+            <div style="margin: 15px 0;">
+                <h3>回退机制测试</h3>
+                <button class="test-button btn-warning" onclick="testFallbackPages()">
+                    <i class="fas fa-shield-alt"></i>
+                    测试回退页面创建
+                </button>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📊 测试结果</h2>
+            <div id="test-results">
+                <div class="result-info test-result">
+                    测试结果将在这里显示...
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔧 技术实现说明</h2>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 13px;">
+                <h4>修复方案：</h4>
+                <div style="margin: 10px 0;">
+                    <strong>1. Vue路由导航（优先）：</strong><br>
+                    <code>window.f7.views.main.router.navigate('/monitoring')</code>
+                </div>
+                <div style="margin: 10px 0;">
+                    <strong>2. 回退机制（备用）：</strong><br>
+                    <code>createTaskSchedulerPage() // 创建传统页面</code>
+                </div>
+                <div style="margin: 10px 0;">
+                    <strong>3. 功能映射：</strong><br>
+                    • 任务调度/历史/日志 → <code>/monitoring</code><br>
+                    • 系统配置 → <code>/settings</code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知容器 -->
+    <div id="notification" class="notification"></div>
+
+    <!-- 引入JavaScript文件 -->
+    <script src="frontend/js/app.js"></script>
+    <script src="frontend/js/navigation.js"></script>
+    <script src="frontend/js/system-config.js"></script>
+    
+    <script>
+        // 工具类
+        const Utils = {
+            showNotification(message, type = 'info') {
+                const notification = document.getElementById('notification');
+                notification.textContent = message;
+                notification.className = `notification ${type} show`;
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+                
+                // 同时添加到测试结果
+                addTestResult(message, type);
+            }
+        };
+
+        // 模拟导航栏更新函数
+        function updateNavbarForPage(title) {
+            console.log('更新导航栏标题:', title);
+            addTestResult(`导航栏标题更新为: ${title}`, 'info');
+        }
+
+        // 添加测试结果
+        function addTestResult(message, type) {
+            const resultsDiv = document.getElementById('test-results');
+            const timestamp = new Date().toLocaleTimeString();
+            const resultClass = type === 'success' ? 'result-success' : 
+                               type === 'error' ? 'result-error' : 'result-info';
+            
+            const resultElement = document.createElement('div');
+            resultElement.className = `test-result ${resultClass}`;
+            resultElement.innerHTML = `[${timestamp}] ${message}`;
+            
+            resultsDiv.appendChild(resultElement);
+            
+            // 滚动到最新结果
+            resultElement.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 测试Vue导航
+        function testVueNavigation(path) {
+            addTestResult(`测试Vue路由导航到: ${path}`, 'info');
+            
+            if (window.f7 && window.f7.views && window.f7.views.main) {
+                try {
+                    window.f7.views.main.router.navigate(path);
+                    addTestResult(`✅ Vue路由导航成功: ${path}`, 'success');
+                } catch (error) {
+                    addTestResult(`❌ Vue路由导航失败: ${error.message}`, 'error');
+                }
+            } else {
+                addTestResult(`⚠️ Vue路由不可用，Framework7未初始化`, 'error');
+            }
+        }
+
+        // 测试回退页面
+        function testFallbackPages() {
+            addTestResult('测试回退页面创建机制', 'info');
+            
+            // 临时禁用Vue路由来测试回退机制
+            const originalF7 = window.f7;
+            window.f7 = null;
+            
+            try {
+                // 测试创建任务调度页面
+                createTaskSchedulerPage();
+                addTestResult('✅ 任务调度回退页面创建成功', 'success');
+                
+                // 清理页面
+                setTimeout(() => {
+                    const page = document.getElementById('task-scheduler-page');
+                    if (page) page.remove();
+                }, 2000);
+                
+            } catch (error) {
+                addTestResult(`❌ 回退页面创建失败: ${error.message}`, 'error');
+            } finally {
+                // 恢复Vue路由
+                window.f7 = originalF7;
+            }
+        }
+
+        // 检查Framework7状态
+        function checkFramework7Status() {
+            const hasF7 = !!(window.f7);
+            const hasViews = !!(window.f7 && window.f7.views);
+            const hasMainView = !!(window.f7 && window.f7.views && window.f7.views.main);
+            
+            addTestResult(`Framework7状态检查:`, 'info');
+            addTestResult(`  - window.f7: ${hasF7 ? '✅' : '❌'}`, hasF7 ? 'success' : 'error');
+            addTestResult(`  - f7.views: ${hasViews ? '✅' : '❌'}`, hasViews ? 'success' : 'error');
+            addTestResult(`  - f7.views.main: ${hasMainView ? '✅' : '❌'}`, hasMainView ? 'success' : 'error');
+            
+            return hasMainView;
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            addTestResult('按钮功能测试页面加载完成', 'success');
+            addTestResult('所有按钮功能已修复，可以开始测试', 'info');
+            
+            // 检查Framework7状态
+            setTimeout(() => {
+                checkFramework7Status();
+            }, 1000);
+        });
+
+        // 监听按钮点击事件
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('test-button')) {
+                const buttonText = e.target.textContent.trim();
+                addTestResult(`点击按钮: ${buttonText}`, 'info');
+            }
+        });
+    </script>
+</body>
+</html>

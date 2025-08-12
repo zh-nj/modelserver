@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>更新后的模型管理页面测试</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="frontend/css/styles.css">
+</head>
+<body>
+    <div class="container" style="padding: 20px;">
+        <h1>更新后的模型管理页面测试</h1>
+        
+        <div class="card" style="margin: 20px 0;">
+            <div class="card-header">
+                <h2>测试说明</h2>
+            </div>
+            <div class="card-content">
+                <p>这个测试页面用于验证模型管理页面的更新：</p>
+                <ul>
+                    <li>✅ 移除了独立的"添加新模型"模块</li>
+                    <li>✅ 将"添加模型"按钮移到了模型列表标题栏右侧</li>
+                    <li>✅ 保留了"刷新列表"按钮在标题栏右侧</li>
+                    <li>✅ 优化了页面布局，更加简洁</li>
+                </ul>
+                <button class="btn btn-primary" onclick="openModelManagement()">打开模型管理页面</button>
+            </div>
+        </div>
+        
+        <div class="card" style="margin: 20px 0;">
+            <div class="card-header">
+                <h2>预览效果</h2>
+            </div>
+            <div class="card-content">
+                <!-- 模拟更新后的模型管理页面布局 -->
+                <div class="card">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="card-title">
+                            <div class="card-icon success">
+                                <i class="fas fa-list"></i>
+                            </div>
+                            <span>模型列表</span>
+                        </div>
+                        <div class="card-actions" style="display: flex; gap: 8px;">
+                            <button class="btn btn-primary" style="font-size: 14px;">
+                                <i class="fas fa-plus"></i>
+                                添加模型
+                            </button>
+                            <button class="btn btn-secondary" style="font-size: 14px;">
+                                <i class="fas fa-sync-alt"></i>
+                                刷新列表
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div style="padding: 16px; background: var(--surface-color, #f8f9fa); border-radius: 8px; border: 1px solid var(--border-color, #e9ecef);">
+                            <p style="margin: 0; color: var(--text-secondary, #666);">这里是模型列表内容区域</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知容器 -->
+    <div id="notification" class="notification"></div>
+
+    <!-- 引入JavaScript文件 -->
+    <script src="frontend/js/app.js"></script>
+    <script src="frontend/js/navigation.js"></script>
+    <script src="frontend/js/models.js"></script>
+    <script src="frontend/js/model-form.js"></script>
+    
+    <script>
+        // 工具类
+        const Utils = {
+            async apiRequest(url, options = {}) {
+                const defaultOptions = {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                };
+                
+                const finalOptions = { ...defaultOptions, ...options };
+                
+                try {
+                    const response = await fetch(url, finalOptions);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    console.error('API请求失败:', error);
+                    throw error;
+                }
+            },
+            
+            showNotification(message, type = 'info') {
+                const notification = document.getElementById('notification');
+                notification.textContent = message;
+                notification.className = `notification ${type} show`;
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+        };
+
+        // 模拟导航栏更新函数
+        function updateNavbarForPage(title) {
+            console.log('更新导航栏标题:', title);
+        }
+
+        // 页面加载完成后的提示
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('更新后的模型管理页面测试加载完成');
+            Utils.showNotification('页面加载完成，点击按钮测试新的模型管理页面布局', 'success');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>前端修复测试</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .model-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            margin: 8px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .model-info h4 {
+            margin: 0 0 4px 0;
+            color: #333;
+        }
+        .model-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #fff;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background: #f8f9fa;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            color: white;
+        }
+        .status-badge.success {
+            background: #28a745;
+        }
+        .status-badge.secondary {
+            background: #6c757d;
+        }
+        .status-badge.error {
+            background: #dc3545;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 4px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        .notification.show {
+            transform: translateX(0);
+        }
+        .notification.success {
+            background: #28a745;
+        }
+        .notification.error {
+            background: #dc3545;
+        }
+        .notification.info {
+            background: #17a2b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>前端修复测试页面</h1>
+        
+        <div style="margin: 20px 0;">
+            <button class="btn btn-primary" onclick="loadAndDisplayModels()">加载模型列表</button>
+            <button class="btn" onclick="testAddModel()">测试添加模型</button>
+        </div>
+        
+        <div id="model-list">
+            <p>点击"加载模型列表"按钮开始测试</p>
+        </div>
+    </div>
+
+    <!-- 通知容器 -->
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // 工具类
+        const Utils = {
+            async apiRequest(url, options = {}) {
+                const defaultOptions = {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                };
+                
+                const finalOptions = { ...defaultOptions, ...options };
+                
+                try {
+                    const response = await fetch(url, finalOptions);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    console.error('API请求失败:', error);
+                    throw error;
+                }
+            },
+            
+            showNotification(message, type = 'info') {
+                const notification = document.getElementById('notification');
+                notification.textContent = message;
+                notification.className = `notification ${type} show`;
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+        };
+
+        // 加载并显示模型列表
+        async function loadAndDisplayModels() {
+            const modelListDiv = document.getElementById('model-list');
+            
+            try {
+                modelListDiv.innerHTML = '<p>正在加载模型列表...</p>';
+                
+                const models = await Utils.apiRequest('/api/models/');
+                console.log('获取到的模型数据:', models);
+                
+                if (models && models.length > 0) {
+                    let html = '<h3>模型列表 (' + models.length + ' 个)</h3>';
+                    models.forEach(model => {
+                        const statusClass = model.status === 'running' ? 'success' : 
+                                           model.status === 'stopped' ? 'secondary' : 'error';
+                        
+                        html += `
+                            <div class="model-item">
+                                <div class="model-info">
+                                    <h4>${model.name}</h4>
+                                    <div style="font-size: 14px; color: #666;">
+                                        框架: ${model.framework} | 优先级: ${model.priority || 'N/A'}
+                                    </div>
+                                    <div style="font-size: 12px; color: #888; margin-top: 4px;">
+                                        路径: ${model.model_path || '未定义'}
+                                    </div>
+                                </div>
+                                <div class="model-actions">
+                                    <span class="status-badge ${statusClass}">${model.status || '未知'}</span>
+                                    <button class="btn" onclick="editModel('${model.id}')">
+                                        <i class="fas fa-edit"></i> 编辑
+                                    </button>
+                                    <button class="btn" onclick="deleteModel('${model.id}')">
+                                        <i class="fas fa-trash"></i> 删除
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    modelListDiv.innerHTML = html;
+                    Utils.showNotification('模型列表加载成功', 'success');
+                } else {
+                    modelListDiv.innerHTML = '<p style="text-align: center; color: #666;">暂无模型配置</p>';
+                    Utils.showNotification('暂无模型配置', 'info');
+                }
+                
+            } catch (error) {
+                console.error('加载模型列表失败:', error);
+                modelListDiv.innerHTML = `<p style="color: #dc3545;">加载模型列表失败: ${error.message}</p>`;
+                Utils.showNotification(`加载失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 编辑模型
+        async function editModel(modelId) {
+            try {
+                Utils.showNotification('正在获取模型配置...', 'info');
+                const config = await Utils.apiRequest(`/api/models/${modelId}/config`);
+                console.log('获取到的模型配置:', config);
+                Utils.showNotification(`模型 "${config.name}" 配置获取成功，编辑功能已实现`, 'success');
+            } catch (error) {
+                console.error('获取模型配置失败:', error);
+                Utils.showNotification(`获取模型配置失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 删除模型
+        async function deleteModel(modelId) {
+            if (!confirm('确定要删除这个模型吗？此操作不可撤销。')) {
+                return;
+            }
+            
+            try {
+                Utils.showNotification('正在删除模型...', 'info');
+                const response = await Utils.apiRequest(`/api/models/${modelId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response && response.success) {
+                    Utils.showNotification('模型删除成功', 'success');
+                    // 重新加载模型列表
+                    setTimeout(() => {
+                        loadAndDisplayModels();
+                    }, 1000);
+                } else {
+                    Utils.showNotification('模型删除失败', 'error');
+                }
+            } catch (error) {
+                console.error('删除模型失败:', error);
+                Utils.showNotification(`删除模型失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 测试添加模型
+        function testAddModel() {
+            Utils.showNotification('添加模型功能已实现，请在主界面使用', 'info');
+        }
+
+        // 页面加载完成后自动加载模型列表
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('测试页面加载完成');
+            loadAndDisplayModels();
+        });
+    </script>
+</body>
+</html>

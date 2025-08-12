@@ -388,6 +388,7 @@ class ModelManager(ModelManagerInterface):
                     id=config.id,
                     name=config.name,
                     framework=config.framework,
+                    model_path=config.model_path,  # 添加缺失的model_path字段
                     status=status,
                     priority=config.priority,
                     gpu_devices=config.gpu_devices,

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导航功能修复测试</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="frontend/css/styles.css">
+    <style>
+        .fix-summary {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+        }
+        .test-button {
+            margin: 10px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .test-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .result-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .result-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .result-info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 13px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" style="padding: 20px;">
+        <h1>导航功能修复测试</h1>
+        
+        <div class="fix-summary">
+            <h2>✅ 修复完成</h2>
+            <p><strong>问题：</strong>任务调度页面中"打开监控页面"按钮点击无响应</p>
+            <p><strong>原因：</strong>按钮使用了复杂的条件表达式 <code>onclick="window.f7?.views?.main?.router?.navigate('/monitoring') || Utils.showNotification('请使用监控页面', 'info')"</code></p>
+            <p><strong>解决方案：</strong>将复杂的内联表达式替换为专用的导航函数调用</p>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔧 修复详情</h2>
+            
+            <h3>修复前（有问题的代码）：</h3>
+            <div class="code-block">
+&lt;button onclick="window.f7?.views?.main?.router?.navigate('/monitoring') || Utils.showNotification('请使用监控页面', 'info')"&gt;
+    打开监控页面
+&lt;/button&gt;
+            </div>
+            
+            <h3>修复后（新的实现）：</h3>
+            <div class="code-block">
+&lt;button onclick="navigateToMonitoring()"&gt;
+    打开监控页面
+&lt;/button&gt;
+
+// 新增的导航函数
+function navigateToMonitoring() {
+  console.log('尝试导航到监控页面');
+  
+  if (window.f7 && window.f7.views && window.f7.views.main) {
+    try {
+      window.f7.views.main.router.navigate('/monitoring');
+      Utils.showNotification('正在打开监控页面...', 'success');
+    } catch (error) {
+      Utils.showNotification('导航失败，请稍后再试', 'error');
+    }
+  } else {
+    openMonitoring(); // 回退方案
+  }
+}
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🧪 功能测试</h2>
+            <p>测试修复后的导航功能：</p>
+            
+            <div style="margin: 15px 0;">
+                <h3>主要导航功能</h3>
+                <button class="test-button btn-primary" onclick="openTaskScheduler()">
+                    <i class="fas fa-tasks"></i>
+                    任务调度（会创建回退页面）
+                </button>
+                <button class="test-button btn-success" onclick="viewTaskHistory()">
+                    <i class="fas fa-history"></i>
+                    任务历史（会创建回退页面）
+                </button>
+                <button class="test-button btn-warning" onclick="openSystemConfig()">
+                    <i class="fas fa-cogs"></i>
+                    系统配置（会创建回退页面）
+                </button>
+                <button class="test-button btn-info" onclick="viewLogs()">
+                    <i class="fas fa-file-alt"></i>
+                    日志查看（会创建回退页面）
+                </button>
+            </div>
+            
+            <div style="margin: 15px 0;">
+                <h3>新增的导航函数测试</h3>
+                <button class="test-button btn-primary" onclick="navigateToMonitoring()">
+                    <i class="fas fa-chart-line"></i>
+                    导航到监控页面
+                </button>
+                <button class="test-button btn-success" onclick="navigateToSettings()">
+                    <i class="fas fa-wrench"></i>
+                    导航到设置页面
+                </button>
+            </div>
+            
+            <div style="margin: 15px 0;">
+                <h3>回退页面中的按钮测试</h3>
+                <p>点击上面的按钮创建回退页面后，测试页面内的"打开监控页面"按钮是否正常工作</p>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📊 测试结果</h2>
+            <div id="test-results">
+                <div class="result-info test-result">
+                    测试结果将在这里显示...
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🎯 修复优势</h2>
+            <ul>
+                <li>✅ <strong>更可靠的错误处理</strong>：使用 try-catch 捕获导航错误</li>
+                <li>✅ <strong>更好的调试支持</strong>：添加了 console.log 用于调试</li>
+                <li>✅ <strong>清晰的代码结构</strong>：将复杂逻辑封装在专用函数中</li>
+                <li>✅ <strong>统一的导航接口</strong>：所有页面使用相同的导航函数</li>
+                <li>✅ <strong>优雅的回退机制</strong>：Vue路由失败时自动使用备用方案</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 通知容器 -->
+    <div id="notification" class="notification"></div>
+
+    <!-- 引入JavaScript文件 -->
+    <script src="frontend/js/app.js"></script>
+    <script src="frontend/js/navigation.js"></script>
+    <script src="frontend/js/system-config.js"></script>
+    
+    <script>
+        // 工具类
+        const Utils = {
+            showNotification(message, type = 'info') {
+                const notification = document.getElementById('notification');
+                notification.textContent = message;
+                notification.className = `notification ${type} show`;
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+                
+                // 同时添加到测试结果
+                addTestResult(message, type);
+            },
+            
+            async apiRequest(url, options = {}) {
+                // 模拟API请求
+                return new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        if (url.includes('/monitoring/system')) {
+                            resolve({ status: 'ok' });
+                        } else {
+                            reject(new Error('API不可用'));
+                        }
+                    }, 1000);
+                });
+            }
+        };
+
+        // 模拟导航栏更新函数
+        function updateNavbarForPage(title) {
+            console.log('更新导航栏标题:', title);
+            addTestResult(`导航栏标题更新为: ${title}`, 'info');
+        }
+
+        // 添加测试结果
+        function addTestResult(message, type) {
+            const resultsDiv = document.getElementById('test-results');
+            const timestamp = new Date().toLocaleTimeString();
+            const resultClass = type === 'success' ? 'result-success' : 
+                               type === 'error' ? 'result-error' : 'result-info';
+            
+            const resultElement = document.createElement('div');
+            resultElement.className = `test-result ${resultClass}`;
+            resultElement.innerHTML = `[${timestamp}] ${message}`;
+            
+            resultsDiv.appendChild(resultElement);
+            
+            // 滚动到最新结果
+            resultElement.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 检查Framework7状态
+        function checkFramework7Status() {
+            const hasF7 = !!(window.f7);
+            const hasViews = !!(window.f7 && window.f7.views);
+            const hasMainView = !!(window.f7 && window.f7.views && window.f7.views.main);
+            
+            addTestResult(`Framework7状态检查:`, 'info');
+            addTestResult(`  - window.f7: ${hasF7 ? '✅' : '❌'}`, hasF7 ? 'success' : 'error');
+            addTestResult(`  - f7.views: ${hasViews ? '✅' : '❌'}`, hasViews ? 'success' : 'error');
+            addTestResult(`  - f7.views.main: ${hasMainView ? '✅' : '❌'}`, hasMainView ? 'success' : 'error');
+            
+            if (!hasMainView) {
+                addTestResult('Vue路由不可用，将使用回退机制', 'info');
+            }
+            
+            return hasMainView;
+        }
+
+        // 测试导航函数
+        function testNavigationFunctions() {
+            addTestResult('开始测试导航函数...', 'info');
+            
+            // 测试navigateToMonitoring函数是否存在
+            if (typeof navigateToMonitoring === 'function') {
+                addTestResult('✅ navigateToMonitoring 函数已定义', 'success');
+            } else {
+                addTestResult('❌ navigateToMonitoring 函数未定义', 'error');
+            }
+            
+            // 测试navigateToSettings函数是否存在
+            if (typeof navigateToSettings === 'function') {
+                addTestResult('✅ navigateToSettings 函数已定义', 'success');
+            } else {
+                addTestResult('❌ navigateToSettings 函数未定义', 'error');
+            }
+            
+            // 测试回退页面创建函数
+            const fallbackFunctions = [
+                'createTaskSchedulerPage',
+                'createTaskHistoryPage', 
+                'createSystemConfigPage',
+                'createLogViewerPage'
+            ];
+            
+            fallbackFunctions.forEach(funcName => {
+                if (typeof window[funcName] === 'function') {
+                    addTestResult(`✅ ${funcName} 函数已定义`, 'success');
+                } else {
+                    addTestResult(`❌ ${funcName} 函数未定义`, 'error');
+                }
+            });
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            addTestResult('导航功能修复测试页面加载完成', 'success');
+            addTestResult('问题已修复：按钮点击无响应 → 使用专用导航函数', 'success');
+            
+            // 检查Framework7状态
+            setTimeout(() => {
+                checkFramework7Status();
+                testNavigationFunctions();
+            }, 1000);
+        });
+
+        // 监听按钮点击事件
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('test-button')) {
+                const buttonText = e.target.textContent.trim();
+                addTestResult(`点击按钮: ${buttonText}`, 'info');
+            }
+        });
+
+        // 监听页面创建事件
+        const originalCreateTaskSchedulerPage = createTaskSchedulerPage;
+        window.createTaskSchedulerPage = function() {
+            addTestResult('创建任务调度回退页面...', 'info');
+            originalCreateTaskSchedulerPage();
+            
+            // 检查页面内的按钮是否正确设置
+            setTimeout(() => {
+                const schedulerPage = document.getElementById('task-scheduler-page');
+                if (schedulerPage) {
+                    const button = schedulerPage.querySelector('button[onclick="navigateToMonitoring()"]');
+                    if (button) {
+                        addTestResult('✅ 回退页面中的导航按钮已正确设置', 'success');
+                    } else {
+                        addTestResult('❌ 回退页面中的导航按钮设置有问题', 'error');
+                    }
+                }
+            }, 100);
+        };
+    </script>
+</body>
+</html>

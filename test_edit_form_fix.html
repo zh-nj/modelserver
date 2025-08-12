@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑表单修复测试</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="frontend/css/styles.css">
+</head>
+<body>
+    <div class="container" style="padding: 20px;">
+        <h1>编辑表单修复测试</h1>
+        
+        <div class="card" style="margin: 20px 0;">
+            <div class="card-header">
+                <h2>测试编辑表单</h2>
+            </div>
+            <div class="card-content">
+                <button class="btn btn-primary" onclick="testEditWithParams()">测试有附加参数的模型</button>
+                <button class="btn btn-secondary" onclick="testEditWithoutParams()">测试无附加参数的模型</button>
+                <button class="btn" onclick="testRealModelEdit()">测试真实模型编辑</button>
+            </div>
+        </div>
+        
+        <div id="test-results" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+            <h3>测试结果</h3>
+            <p>点击测试按钮查看结果</p>
+        </div>
+    </div>
+
+    <!-- 通知容器 -->
+    <div id="notification" class="notification"></div>
+
+    <!-- 引入JavaScript文件 -->
+    <script src="frontend/js/app.js"></script>
+    <script src="frontend/js/model-form.js"></script>
+    
+    <script>
+        // 工具类
+        const Utils = {
+            async apiRequest(url, options = {}) {
+                const defaultOptions = {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                };
+                
+                const finalOptions = { ...defaultOptions, ...options };
+                
+                try {
+                    const response = await fetch(url, finalOptions);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    console.error('API请求失败:', error);
+                    throw error;
+                }
+            },
+            
+            showNotification(message, type = 'info') {
+                const notification = document.getElementById('notification');
+                notification.textContent = message;
+                notification.className = `notification ${type} show`;
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+        };
+
+        // 测试有附加参数的模型
+        function testEditWithParams() {
+            const config = {
+                id: "test_model_with_params",
+                name: "测试模型（有参数）",
+                framework: "llama_cpp",
+                model_path: "/test/model.gguf",
+                priority: 7,
+                additional_parameters: "--ctx-size 4096 --n-gpu-layers 32 --threads 8",
+                resource_requirements: {
+                    gpu_memory: 6144
+                }
+            };
+            
+            console.log('测试配置:', config);
+            showEditModelForm(config);
+            
+            // 检查表单字段值
+            setTimeout(() => {
+                const additionalParamsField = document.getElementById('edit-model-additional-params');
+                const results = document.getElementById('test-results');
+                
+                results.innerHTML = `
+                    <h3>测试结果 - 有附加参数</h3>
+                    <p><strong>原始配置值:</strong> "${config.additional_parameters}"</p>
+                    <p><strong>表单字段值:</strong> "${additionalParamsField ? additionalParamsField.value : '字段不存在'}"</p>
+                    <p><strong>值是否匹配:</strong> ${additionalParamsField && additionalParamsField.value === config.additional_parameters ? '✅ 是' : '❌ 否'}</p>
+                    <p><strong>字段长度:</strong> ${additionalParamsField ? additionalParamsField.value.length : 0} 字符</p>
+                `;
+                
+                if (additionalParamsField && additionalParamsField.value === config.additional_parameters) {
+                    Utils.showNotification('附加参数字段值设置正确！', 'success');
+                } else {
+                    Utils.showNotification('附加参数字段值设置有问题', 'error');
+                }
+            }, 200);
+        }
+
+        // 测试无附加参数的模型
+        function testEditWithoutParams() {
+            const config = {
+                id: "test_model_without_params",
+                name: "测试模型（无参数）",
+                framework: "vllm",
+                model_path: "/test/model2.gguf",
+                priority: 5,
+                additional_parameters: null,
+                resource_requirements: {
+                    gpu_memory: 4096
+                }
+            };
+            
+            console.log('测试配置:', config);
+            showEditModelForm(config);
+            
+            // 检查表单字段值
+            setTimeout(() => {
+                const additionalParamsField = document.getElementById('edit-model-additional-params');
+                const results = document.getElementById('test-results');
+                
+                results.innerHTML = `
+                    <h3>测试结果 - 无附加参数</h3>
+                    <p><strong>原始配置值:</strong> ${JSON.stringify(config.additional_parameters)}</p>
+                    <p><strong>表单字段值:</strong> "${additionalParamsField ? additionalParamsField.value : '字段不存在'}"</p>
+                    <p><strong>字段是否为空:</strong> ${additionalParamsField && additionalParamsField.value === '' ? '✅ 是' : '❌ 否'}</p>
+                    <p><strong>字段长度:</strong> ${additionalParamsField ? additionalParamsField.value.length : 0} 字符</p>
+                `;
+                
+                if (additionalParamsField && additionalParamsField.value === '') {
+                    Utils.showNotification('空附加参数处理正确！', 'success');
+                } else {
+                    Utils.showNotification('空附加参数处理有问题', 'error');
+                }
+            }, 200);
+        }
+
+        // 测试真实模型编辑
+        async function testRealModelEdit() {
+            try {
+                Utils.showNotification('正在获取真实模型配置...', 'info');
+                const config = await Utils.apiRequest('/api/models/test_model_with_params/config');
+                console.log('真实模型配置:', config);
+                
+                showEditModelForm(config);
+                
+                // 检查表单字段值
+                setTimeout(() => {
+                    const additionalParamsField = document.getElementById('edit-model-additional-params');
+                    const results = document.getElementById('test-results');
+                    
+                    results.innerHTML = `
+                        <h3>测试结果 - 真实模型</h3>
+                        <p><strong>模型名称:</strong> ${config.name}</p>
+                        <p><strong>原始配置值:</strong> "${config.additional_parameters || ''}"</p>
+                        <p><strong>表单字段值:</strong> "${additionalParamsField ? additionalParamsField.value : '字段不存在'}"</p>
+                        <p><strong>值是否匹配:</strong> ${additionalParamsField && additionalParamsField.value === (config.additional_parameters || '') ? '✅ 是' : '❌ 否'}</p>
+                        <p><strong>字段长度:</strong> ${additionalParamsField ? additionalParamsField.value.length : 0} 字符</p>
+                        <p><strong>配置长度:</strong> ${config.additional_parameters ? config.additional_parameters.length : 0} 字符</p>
+                    `;
+                    
+                    if (additionalParamsField && additionalParamsField.value === (config.additional_parameters || '')) {
+                        Utils.showNotification('真实模型附加参数字段值设置正确！', 'success');
+                    } else {
+                        Utils.showNotification('真实模型附加参数字段值设置有问题', 'error');
+                    }
+                }, 200);
+                
+            } catch (error) {
+                console.error('获取真实模型配置失败:', error);
+                document.getElementById('test-results').innerHTML = `
+                    <h3>错误</h3>
+                    <p style="color: red;">获取真实模型配置失败: ${error.message}</p>
+                `;
+                Utils.showNotification(`获取配置失败: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
