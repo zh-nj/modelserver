@@ -1,0 +1,38 @@
+<svg width="640" height="144" viewBox="0 0 640 144" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="12" y1="12" x2="116" y2="116" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#12B8A6"/>
+      <stop offset="1" stop-color="#4F46E5"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Icon -->
+  <g transform="translate(12,12)">
+    <circle cx="64" cy="64" r="46" stroke="url(#grad)" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <g transform="translate(64,64)">
+      <circle cx="0" cy="-46" r="4" fill="#F5B700"/>
+      <g transform="rotate(60)"><circle cx="0" cy="-46" r="4" fill="#12B8A6"/></g>
+      <g transform="rotate(120)"><circle cx="0" cy="-46" r="4" fill="#4F46E5"/></g>
+      <g transform="rotate(180)"><circle cx="0" cy="-46" r="4" fill="#F5B700"/></g>
+      <g transform="rotate(240)"><circle cx="0" cy="-46" r="4" fill="#12B8A6"/></g>
+      <g transform="rotate(300)"><circle cx="0" cy="-46" r="4" fill="#4F46E5"/></g>
+    </g>
+    <rect x="42" y="43" width="12" height="42" rx="6" fill="#0F172A"/>
+    <rect x="66" y="43" width="12" height="42" rx="6" fill="#0F172A"/>
+    <path d="M54 64 H78" stroke="#0F172A" stroke-width="9" stroke-linecap="round"/>
+    <!-- small 'r' -->
+    <text x="88" y="36" font-family="'Inter','Noto Sans','Segoe UI',system-ui,sans-serif" font-size="9" font-weight="700" fill="#0F172A" dominant-baseline="hanging">r</text>
+  </g>
+
+  <!-- Wordmark -->
+  <g transform="translate(140,44)">
+    <text x="0" y="0" font-family="'Noto Sans SC','Source Han Sans SC','PingFang SC','Microsoft YaHei',sans-serif"
+          font-size="32" font-weight="700" fill="#0F172A" dominant-baseline="hanging">
+      慧儿模型园
+    </text>
+    <text x="0" y="44" font-family="'Noto Sans SC','Source Han Sans SC','PingFang SC','Microsoft YaHei',sans-serif"
+          font-size="16" font-weight="500" fill="#475569" letter-spacing="0.02em" dominant-baseline="hanging">
+      LLM 推理管理与监控 · 多框架 · 多 GPU · 智能调度
+    </text>
+  </g>
+</svg>
