@@ -75,6 +75,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { f7 } from 'framework7-vue'
+import { apiClient } from '@/services/api'
 
 // 设置数据
 const settings = ref({
@@ -90,16 +91,23 @@ const logLevels = ['DEBUG', 'INFO', 'WARNING', 'ERROR']
 // 保存设置
 const saveSettings = async () => {
   try {
-    // TODO: 调用API保存设置
-    console.log('保存设置:', settings.value)
+    // 映射到后端字段
+    const payload = {
+      max_models: settings.value.maxConcurrentModels,
+      monitoring_interval: settings.value.gpuCheckInterval,
+      health_check_interval: settings.value.modelHealthCheckInterval,
+      log_level: settings.value.logLevel
+    }
+    await apiClient.put('/api/v1/system/config', payload)
+
     f7.toast.create({
-      text: '设置保存成功',
+      text: '设置保存成功，部分更改需重启服务生效',
       closeTimeout: 2000
     }).open()
-  } catch (error) {
+  } catch (error: any) {
     f7.toast.create({
-      text: '设置保存失败',
-      closeTimeout: 2000
+      text: `设置保存失败: ${error.message || '未知错误'}`,
+      closeTimeout: 2500
     }).open()
   }
 }
@@ -107,35 +115,44 @@ const saveSettings = async () => {
 // 备份配置
 const backupConfig = async () => {
   try {
-    // TODO: 调用API备份配置
+    const res = await apiClient.post('/api/v1/system/backup')
+    const backupPath = (res.data as any)?.backup_path || (res.data as any)?.data?.backup_path
     f7.toast.create({
-      text: '配置备份成功',
+      text: `配置备份成功${backupPath ? '：' + backupPath : ''}`,
       closeTimeout: 2000
     }).open()
-  } catch (error) {
+  } catch (error: any) {
     f7.toast.create({
-      text: '配置备份失败',
-      closeTimeout: 2000
+      text: `配置备份失败: ${error.message || '未知错误'}`,
+      closeTimeout: 2500
     }).open()
   }
 }
 
-// 恢复配置
+// 恢复配置（默认恢复最新备份）
 const restoreConfig = async () => {
   f7.dialog.confirm(
-    '确定要恢复配置吗？这将覆盖当前设置。',
+    '确定要恢复最近的配置备份吗？这将覆盖当前设置。',
     '确认恢复',
     async () => {
       try {
-        // TODO: 调用API恢复配置
+        // 拉取备份列表，选择最新一个
+        const listRes = await apiClient.get('/api/v1/system/backups')
+        const backups = (listRes.data as any)?.backups || (listRes.data as any)?.data?.backups || []
+        if (!backups.length) {
+          f7.toast.create({ text: '未找到备份文件', closeTimeout: 2000 }).open()
+          return
+        }
+        const latest = backups[0]
+        const backupPath = latest.path || latest.file_path
+
+        await apiClient.post('/api/v1/system/restore', { backup_path: backupPath })
+        f7.toast.create({ text: '配置恢复成功，可能需要重启服务', closeTimeout: 2200 }).open()
+        await loadSettings()
+      } catch (error: any) {
         f7.toast.create({
-          text: '配置恢复成功',
-          closeTimeout: 2000
-        }).open()
-      } catch (error) {
-        f7.toast.create({
-          text: '配置恢复失败',
-          closeTimeout: 2000
+          text: `配置恢复失败: ${error.message || '未知错误'}`,
+          closeTimeout: 2500
         }).open()
       }
     }
@@ -144,8 +161,21 @@ const restoreConfig = async () => {
 
 // 加载设置
 const loadSettings = async () => {
-  // TODO: 从API加载设置
-  console.log('加载设置')
+  try {
+    const res = await apiClient.get('/api/v1/system/config')
+    const data = (res.data as any)
+    const app = data?.application || data?.data?.application
+
+    if (app) {
+      settings.value.maxConcurrentModels = app.max_models ?? settings.value.maxConcurrentModels
+      settings.value.gpuCheckInterval = app.monitoring_interval ?? settings.value.gpuCheckInterval
+      settings.value.modelHealthCheckInterval = app.health_check_interval ?? settings.value.modelHealthCheckInterval
+      settings.value.logLevel = app.log_level ?? settings.value.logLevel
+    }
+  } catch (error) {
+    // 轻提示，不中断页面
+    console.warn('加载系统配置失败:', error)
+  }
 }
 
 onMounted(() => {
